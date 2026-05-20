@@ -3,6 +3,8 @@ import {
   type CreateUserWithEmailAndPasswordInput,
   generateUserTokenPayload,
   type GenerateUserTokenPayloadType,
+  signInWithEmailAndPasswordInput,
+  SignInWithEmailAndPasswordInput,
 } from "./model";
 import * as jwt from "jsonwebtoken";
 import { randomBytes, createHmac } from "node:crypto";
@@ -23,6 +25,33 @@ class UserService {
     return { token };
   }
 
+  private async generatehash(salt: string, password: string) {
+    return createHmac("sha256", salt).update(password).digest("hex");
+  }
+
+  private async verifyUserToken(token: string): Promise<GenerateUserTokenPayloadType> {
+    try {
+      const verificationResult = jwt.verify(token, env.JWT_SECRET) as GenerateUserTokenPayloadType;
+      return verificationResult;
+    } catch (error) {
+      throw new Error("Invalid token");
+    }
+  }
+
+  private async getuserInfo(id: string) {
+    const user = await db
+      .select({
+        id: usersTable.id,
+        email: usersTable.email,
+        fullName: usersTable.fullName,
+        avatarURL: usersTable.avatarUrl,
+      })
+      .from(usersTable)
+      .where(eq(usersTable.id, id));
+    if (!user || user.length === 0) throw new Error("User not found");
+    return user[0]!;
+  }
+
   public async createUserWithEmailAndPassword(payload: CreateUserWithEmailAndPasswordInput) {
     const { fullName, email, password } =
       await createUserWithEmailAndPasswordInput.parseAsync(payload);
@@ -33,7 +62,7 @@ class UserService {
 
     //calcaulate salt & hash for the password
     const salt = randomBytes(16).toString("hex");
-    const hash = createHmac("sha256", salt).update(password).digest("hex");
+    const hash = await this.generatehash(salt, password);
 
     // create the user in the database
     const userInsertResult = await db
@@ -51,6 +80,34 @@ class UserService {
     return {
       id: userId,
       token,
+    };
+  }
+
+  public async signInWithEmailAndPassword(payload: SignInWithEmailAndPasswordInput) {
+    const { email, password } = await signInWithEmailAndPasswordInput.parseAsync(payload);
+
+    const existingUser = await this.getUserByEmail(email);
+
+    if (!existingUser) throw new Error("Invalid email or password");
+
+    if (!existingUser.salt || !existingUser.password) throw new Error("Invalid email or password");
+
+    const hash = await this.generatehash(existingUser.salt, password);
+
+    if (hash !== existingUser.password) throw new Error("Invalid email or password");
+
+    const { token } = await this.generateUserToken({ id: existingUser.id });
+    return {
+      id: existingUser.id,
+      token,
+    };
+  }
+
+  public async verifyAndDecodeUserToken(token: string) {
+    const { id } = await this.verifyUserToken(token);
+    const userInfo = await this.getuserInfo(id);
+    return {
+      ...userInfo,
     };
   }
 }

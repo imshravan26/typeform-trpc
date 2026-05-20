@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/com
 import { Field, FieldDescription, FieldGroup, FieldLabel } from "~/components/ui/field";
 import { Input } from "~/components/ui/input";
 import { useSignup } from "~/hooks/api/auth";
+import { useRouter } from "next/navigation";
 
 type SignupFormValues = {
   name: string;
@@ -15,6 +16,7 @@ type SignupFormValues = {
 };
 
 export function SignupForm({ className, ...props }: React.ComponentProps<"div">) {
+  const router = useRouter();
   const { createUserWithEmailAndPasswordAsync } = useSignup();
   const { register, handleSubmit } = useForm<SignupFormValues>({
     defaultValues: {
@@ -33,7 +35,7 @@ export function SignupForm({ className, ...props }: React.ComponentProps<"div">)
       password: values.password,
     });
 
-    console.log(`user created with id = ${id}`);
+    router.replace("/dashboard");
   };
 
   return (
@@ -91,7 +93,7 @@ export function SignupForm({ className, ...props }: React.ComponentProps<"div">)
               <Field>
                 <Button type="submit">Create Account</Button>
                 <FieldDescription className="text-center">
-                  Already have an account? <a href="#">Sign in</a>
+                  Already have an account? <a href="/login">Sign in</a>
                 </FieldDescription>
               </Field>
             </FieldGroup>
