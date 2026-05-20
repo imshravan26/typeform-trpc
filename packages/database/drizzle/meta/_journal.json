@@ -15,6 +15,20 @@
       "when": 1779103103455,
       "tag": "0001_cynical_mimic",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1779260343511,
+      "tag": "0002_panoramic_slayback",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1779262092584,
+      "tag": "0003_simple_captain_stacy",
+      "breakpoints": true
     }
   ]
 }
