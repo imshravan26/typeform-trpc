@@ -38,7 +38,7 @@ class UserService {
     }
   }
 
-  private async getuserInfo(id: string) {
+  public async getuserInfoById(id: string) {
     const user = await db
       .select({
         id: usersTable.id,
@@ -105,7 +105,7 @@ class UserService {
 
   public async verifyAndDecodeUserToken(token: string) {
     const { id } = await this.verifyUserToken(token);
-    const userInfo = await this.getuserInfo(id);
+    const userInfo = await this.getuserInfoById(id);
     return {
       ...userInfo,
     };
