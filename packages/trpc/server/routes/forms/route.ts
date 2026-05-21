@@ -1,8 +1,18 @@
 import {
+  createFieldInputModel,
+  createFieldOutputModel,
   createFormInputModel,
   createFormOutputModel,
+  deleteFieldInputModel,
+  deleteFieldOutputModel,
+  getFieldInputModel,
+  getFieldOutputModel,
+  listFieldsInputModel,
+  listFieldsOutputModel,
   listFormsInputModel,
   listFormsOutputModel,
+  updateFieldInputModel,
+  updateFieldOutputModel,
 } from "./model";
 import { authenticatedProcedure, router } from "../../trpc";
 import { generatePath } from "../../utils/path-generator";
@@ -55,6 +65,101 @@ export const formRouter = router({
 
       return {
         forms,
+      };
+    }),
+
+  createField: authenticatedProcedure
+    .meta({
+      openapi: {
+        method: "POST",
+        path: getPath("/createField"),
+        tags: TAGS,
+        protect: true,
+      },
+    })
+    .input(createFieldInputModel)
+    .output(createFieldOutputModel)
+    .mutation(async ({ input }) => {
+      const { id } = await formService.createField(input);
+
+      return {
+        id,
+      };
+    }),
+
+  getField: authenticatedProcedure
+    .meta({
+      openapi: {
+        method: "GET",
+        path: getPath("/getField"),
+        tags: TAGS,
+        protect: true,
+      },
+    })
+    .input(getFieldInputModel)
+    .output(getFieldOutputModel)
+    .query(async ({ input }) => {
+      const { field } = await formService.getField(input);
+
+      return {
+        field,
+      };
+    }),
+
+  listFields: authenticatedProcedure
+    .meta({
+      openapi: {
+        method: "GET",
+        path: getPath("/listFields"),
+        tags: TAGS,
+        protect: true,
+      },
+    })
+    .input(listFieldsInputModel)
+    .output(listFieldsOutputModel)
+    .query(async ({ input }) => {
+      const { fields } = await formService.listFieldsByFormId(input);
+
+      return {
+        fields,
+      };
+    }),
+
+  updateField: authenticatedProcedure
+    .meta({
+      openapi: {
+        method: "PATCH",
+        path: getPath("/updateField"),
+        tags: TAGS,
+        protect: true,
+      },
+    })
+    .input(updateFieldInputModel)
+    .output(updateFieldOutputModel)
+    .mutation(async ({ input }) => {
+      const { id } = await formService.updateField(input);
+
+      return {
+        id,
+      };
+    }),
+
+  deleteField: authenticatedProcedure
+    .meta({
+      openapi: {
+        method: "DELETE",
+        path: getPath("/deleteField"),
+        tags: TAGS,
+        protect: true,
+      },
+    })
+    .input(deleteFieldInputModel)
+    .output(deleteFieldOutputModel)
+    .mutation(async ({ input }) => {
+      const { id } = await formService.deleteField(input);
+
+      return {
+        id,
       };
     }),
 });

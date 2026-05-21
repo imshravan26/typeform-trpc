@@ -8,6 +8,7 @@ import {
   text,
   numeric,
   unique,
+  PgTable,
 } from "drizzle-orm/pg-core";
 import { formsTable } from "./form";
 
@@ -27,15 +28,17 @@ export const formFieldsTable = pgTable(
     labelKey: varchar("label_key", { length: 255 }).notNull(),
     description: text("description"),
     placeholder: text("placeholder"),
-    isRequired: boolean("is_required").default(false),
+    isRequired: boolean("is_required").default(false).notNull(),
     index: numeric("index", { scale: 2 }).notNull(),
     type: fieldTypeEnum("type").notNull(),
     formId: uuid("form_id")
       .references(() => formsTable.id)
       .notNull(),
 
-    createdAt: timestamp("created_at").defaultNow(),
-    updatedAt: timestamp("updated_at").$onUpdate(() => new Date()),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+      .$onUpdate(() => new Date())
+      .notNull(),
   },
   (table) => {
     return {

@@ -1,5 +1,9 @@
 import { trpc } from "~/trpc/client";
 
+type UseFieldOptions = {
+  enabled?: boolean;
+};
+
 export const useCreateForm = () => {
   const utils = trpc.useUtils();
   const {
@@ -20,6 +24,139 @@ export const useCreateForm = () => {
   return {
     createFormAsync,
     createForm,
+    error,
+    failureCount,
+    isError,
+    isIdle,
+    isSuccess,
+    isPending,
+  };
+};
+
+export const useCreateField = () => {
+  const utils = trpc.useUtils();
+  const {
+    mutateAsync: createFieldAsync,
+    mutate: createField,
+    error,
+    failureCount,
+    isError,
+    isIdle,
+    isSuccess,
+    isPending,
+  } = trpc.form.createField.useMutation({
+    onSuccess: async () => {
+      await utils.form.invalidate();
+    },
+  });
+
+  return {
+    createFieldAsync,
+    createField,
+    error,
+    failureCount,
+    isError,
+    isIdle,
+    isSuccess,
+    isPending,
+  };
+};
+
+export const useField = (id: string, options?: UseFieldOptions) => {
+  const {
+    data,
+    error,
+    isFetched,
+    isLoading,
+    isPending,
+  } = trpc.form.getField.useQuery(
+    { id },
+    {
+      enabled: options?.enabled ?? Boolean(id),
+    },
+  );
+
+  return {
+    field: data?.field,
+    error,
+    isFetched,
+    isLoading,
+    isPending,
+  };
+};
+
+export const useFormFields = (formId: string, options?: UseFieldOptions) => {
+  const {
+    data,
+    error,
+    isFetched,
+    isLoading,
+    isPending,
+  } = trpc.form.listFields.useQuery(
+    { formId },
+    {
+      enabled: options?.enabled ?? Boolean(formId),
+    },
+  );
+
+  return {
+    fields: data?.fields ?? [],
+    error,
+    isFetched,
+    isLoading,
+    isPending,
+  };
+};
+
+export const useUpdateField = () => {
+  const utils = trpc.useUtils();
+  const {
+    mutateAsync: updateFieldAsync,
+    mutate: updateField,
+    error,
+    failureCount,
+    isError,
+    isIdle,
+    isSuccess,
+    isPending,
+  } = trpc.form.updateField.useMutation({
+    onSuccess: async () => {
+      await utils.form.invalidate();
+    },
+  });
+
+  return {
+    updateFieldAsync,
+    updateField,
+    error,
+    failureCount,
+    isError,
+    isIdle,
+    isSuccess,
+    isPending,
+  };
+};
+
+export const useDeleteField = () => {
+  const utils = trpc.useUtils();
+  const {
+    mutateAsync: deleteFieldAsync,
+    mutate: deleteField,
+    error,
+    failureCount,
+    isError,
+    isIdle,
+    isSuccess,
+    isPending,
+  } = trpc.form.deleteField.useMutation({
+    onSuccess: async () => {
+      await utils.form.invalidate();
+    },
+  });
+
+  return {
+    deleteFieldAsync,
+    deleteField,
     error,
     failureCount,
     isError,

@@ -8,10 +8,11 @@ export const formsTable = pgTable("forms", {
   createdBy: uuid("created_by")
     .references(() => usersTable.id)
     .notNull(),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").$onUpdate(() => new Date()),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at")
+    .$onUpdate(() => new Date())
+    .notNull(),
 });
-
 
 export type SelectForm = typeof formsTable.$inferSelect;
 export type InsertForm = typeof formsTable.$inferInsert;

@@ -1,11 +1,29 @@
-import { db, eq } from "@repo/database";
+import { asc, db, eq } from "@repo/database";
+import { formFieldsTable } from "@repo/database/models/formFields";
 import { formsTable } from "@repo/database/models/form";
 import {
+  createFieldInput,
   createFormInput,
+  deleteFieldInput,
+  getFieldInput,
+  listFieldsByFormIdInput,
   listFormsByUserIdInput,
+  updateFieldInput,
+  type CreateFieldInputType,
   type CreateFormInputType,
+  type DeleteFieldInputType,
+  type GetFieldInputType,
+  type ListFieldsByFormIdInputType,
   type ListFormsByUserIdInputType,
+  type UpdateFieldInputType,
 } from "./model";
+
+const getLabelKey = (label: string) =>
+  label
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
 
 class FormService {
   public async createForm(payload: CreateFormInputType) {
@@ -47,6 +65,137 @@ class FormService {
 
     return {
       forms,
+    };
+  }
+
+  public async createField(payload: CreateFieldInputType) {
+    const { label, description, placeholder, isRequired, index, type, formId } =
+      await createFieldInput.parseAsync(payload);
+
+    const fieldInsertResult = await db
+      .insert(formFieldsTable)
+      .values({
+        label,
+        labelKey: getLabelKey(label),
+        description,
+        placeholder,
+        isRequired,
+        index,
+        type,
+        formId,
+      })
+      .returning({
+        id: formFieldsTable.id,
+      });
+
+    if (!fieldInsertResult || fieldInsertResult.length === 0 || !fieldInsertResult[0]?.id)
+      throw new Error("something went wrong");
+
+    return {
+      id: fieldInsertResult[0].id,
+    };
+  }
+
+  public async getField(payload: GetFieldInputType) {
+    const { id } = await getFieldInput.parseAsync(payload);
+
+    const field = await db
+      .select({
+        id: formFieldsTable.id,
+        label: formFieldsTable.label,
+        labelKey: formFieldsTable.labelKey,
+        description: formFieldsTable.description,
+        placeholder: formFieldsTable.placeholder,
+        isRequired: formFieldsTable.isRequired,
+        index: formFieldsTable.index,
+        type: formFieldsTable.type,
+        formId: formFieldsTable.formId,
+        createdAt: formFieldsTable.createdAt,
+        updatedAt: formFieldsTable.updatedAt,
+      })
+      .from(formFieldsTable)
+      .where(eq(formFieldsTable.id, id));
+
+    if (!field || field.length === 0 || !field[0]) throw new Error("Field not found");
+
+    return {
+      field: field[0],
+    };
+  }
+
+  public async listFieldsByFormId(payload: ListFieldsByFormIdInputType) {
+    const { formId } = await listFieldsByFormIdInput.parseAsync(payload);
+
+    const fields = await db
+      .select({
+        id: formFieldsTable.id,
+        label: formFieldsTable.label,
+        labelKey: formFieldsTable.labelKey,
+        description: formFieldsTable.description,
+        placeholder: formFieldsTable.placeholder,
+        isRequired: formFieldsTable.isRequired,
+        index: formFieldsTable.index,
+        type: formFieldsTable.type,
+        formId: formFieldsTable.formId,
+        createdAt: formFieldsTable.createdAt,
+        updatedAt: formFieldsTable.updatedAt,
+      })
+      .from(formFieldsTable)
+      .where(eq(formFieldsTable.formId, formId))
+      .orderBy(asc(formFieldsTable.index));
+
+    return {
+      fields,
+    };
+  }
+
+  public async updateField(payload: UpdateFieldInputType) {
+    const { id, label, description, placeholder, isRequired, index, type } =
+      await updateFieldInput.parseAsync(payload);
+
+    const fieldUpdateResult = await db
+      .update(formFieldsTable)
+      .set({
+        ...(label !== undefined
+          ? {
+              label,
+              labelKey: getLabelKey(label),
+            }
+          : {}),
+        ...(description !== undefined ? { description } : {}),
+        ...(placeholder !== undefined ? { placeholder } : {}),
+        ...(isRequired !== undefined ? { isRequired } : {}),
+        ...(index !== undefined ? { index } : {}),
+        ...(type !== undefined ? { type } : {}),
+      })
+      .where(eq(formFieldsTable.id, id))
+      .returning({
+        id: formFieldsTable.id,
+      });
+
+    if (!fieldUpdateResult || fieldUpdateResult.length === 0 || !fieldUpdateResult[0]?.id)
+      throw new Error("Field not found");
+
+    return {
+      id: fieldUpdateResult[0].id,
+    };
+  }
+
+  public async deleteField(payload: DeleteFieldInputType) {
+    const { id } = await deleteFieldInput.parseAsync(payload);
+
+    const fieldDeleteResult = await db
+      .delete(formFieldsTable)
+      .where(eq(formFieldsTable.id, id))
+      .returning({
+        id: formFieldsTable.id,
+      });
+
+    if (!fieldDeleteResult || fieldDeleteResult.length === 0 || !fieldDeleteResult[0]?.id)
+      throw new Error("Field not found");
+
+    return {
+      id: fieldDeleteResult[0].id,
     };
   }
 }

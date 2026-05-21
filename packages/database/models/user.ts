@@ -8,8 +8,10 @@ export const usersTable = pgTable("users", {
   salt: text("salt"),
   password: text("password"),
   avatarUrl: text("avatar_url"),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").$onUpdate(() => new Date()),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at")
+    .$onUpdate(() => new Date())
+    .notNull(),
 });
 
 export type SelectUser = typeof usersTable.$inferSelect;
