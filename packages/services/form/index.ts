@@ -6,6 +6,7 @@ import {
   createFormInput,
   deleteFieldInput,
   getFieldInput,
+  getFormWithFieldsInput,
   listFieldsByFormIdInput,
   listFormsByUserIdInput,
   updateFieldInput,
@@ -13,6 +14,7 @@ import {
   type CreateFormInputType,
   type DeleteFieldInputType,
   type GetFieldInputType,
+  type GetFormWithFieldsInputType,
   type ListFieldsByFormIdInputType,
   type ListFormsByUserIdInputType,
   type UpdateFieldInputType,
@@ -65,6 +67,50 @@ class FormService {
 
     return {
       forms,
+    };
+  }
+
+  public async getFormWithFields(payload: GetFormWithFieldsInputType) {
+    const { formId } = await getFormWithFieldsInput.parseAsync(payload);
+
+    const rows = await db
+      .select({
+        form: {
+          id: formsTable.id,
+          title: formsTable.title,
+          description: formsTable.description,
+          createdBy: formsTable.createdBy,
+          createdAt: formsTable.createdAt,
+          updatedAt: formsTable.updatedAt,
+        },
+        field: {
+          id: formFieldsTable.id,
+          label: formFieldsTable.label,
+          labelKey: formFieldsTable.labelKey,
+          description: formFieldsTable.description,
+          placeholder: formFieldsTable.placeholder,
+          isRequired: formFieldsTable.isRequired,
+          index: formFieldsTable.index,
+          type: formFieldsTable.type,
+          formId: formFieldsTable.formId,
+          createdAt: formFieldsTable.createdAt,
+          updatedAt: formFieldsTable.updatedAt,
+        },
+      })
+      .from(formsTable)
+      .leftJoin(formFieldsTable, eq(formsTable.id, formFieldsTable.formId))
+      .where(eq(formsTable.id, formId))
+      .orderBy(asc(formFieldsTable.index));
+
+    if (!rows || rows.length === 0 || !rows[0]?.form) throw new Error("Form not found");
+
+    const form = {
+      ...rows[0].form,
+      fields: rows.flatMap((row) => (row.field ? [row.field] : [])),
+    };
+
+    return {
+      form,
     };
   }
 

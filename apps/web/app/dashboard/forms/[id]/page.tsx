@@ -8,13 +8,7 @@ import { toast } from "sonner";
 
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "~/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -36,12 +30,7 @@ import {
 import { Separator } from "~/components/ui/separator";
 import { Switch } from "~/components/ui/switch";
 import { Textarea } from "~/components/ui/textarea";
-import {
-  useCreateField,
-  useDeleteField,
-  useFormFields,
-  useUpdateField,
-} from "~/hooks/api/forms";
+import { useCreateField, useDeleteField, useFormFields, useUpdateField } from "~/hooks/api/forms";
 
 type FieldType = "TEXT" | "EMAIL" | "NUMBER" | "YES_NO" | "PASSWORD";
 
@@ -66,7 +55,11 @@ const fieldTypeLabels: Record<FieldType, string> = {
 export default function FormBuilderPage() {
   const params = useParams<{ id: string }>();
   const formId = params.id;
-  const { fields: formFields, error: fieldsError, isLoading: areFieldsLoading } = useFormFields(formId);
+  const {
+    fields: formFields,
+    error: fieldsError,
+    isLoading: areFieldsLoading,
+  } = useFormFields(formId);
   const { createFieldAsync, isPending: isCreatingField } = useCreateField();
   const { updateFieldAsync, isPending: isUpdatingField } = useUpdateField();
   const { deleteFieldAsync, isPending: isDeletingField } = useDeleteField();
@@ -270,7 +263,9 @@ export default function FormBuilderPage() {
                     <div className="flex items-center justify-between gap-3">
                       <div>
                         <CardTitle>Fields</CardTitle>
-                        <CardDescription>Add and arrange the questions in this form.</CardDescription>
+                        <CardDescription>
+                          Add and arrange the questions in this form.
+                        </CardDescription>
                       </div>
                       <Dialog
                         open={isCreateFieldDialogOpen}
@@ -289,7 +284,9 @@ export default function FormBuilderPage() {
                           <form onSubmit={handleCreateField} className="grid gap-4">
                             <DialogHeader>
                               <DialogTitle>Create field</DialogTitle>
-                              <DialogDescription>Add a new question to this form.</DialogDescription>
+                              <DialogDescription>
+                                Add a new question to this form.
+                              </DialogDescription>
                             </DialogHeader>
 
                             <div className="grid gap-2">
@@ -395,7 +392,10 @@ export default function FormBuilderPage() {
                       </div>
                     ) : (
                       createdFields.map((field) => (
-                        <div key={field.id} className="flex items-center gap-3 rounded-lg border p-3">
+                        <div
+                          key={field.id}
+                          className="flex items-center gap-3 rounded-lg border p-3"
+                        >
                           <GripVertical className="size-4 text-muted-foreground" />
                           <div className="flex size-9 items-center justify-center rounded-md bg-muted text-muted-foreground">
                             <FileText className="size-4" />

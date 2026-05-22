@@ -7,6 +7,8 @@ import {
   deleteFieldOutputModel,
   getFieldInputModel,
   getFieldOutputModel,
+  getFormWithFieldsInputModel,
+  getFormWithFieldsOutputModel,
   listFieldsInputModel,
   listFieldsOutputModel,
   listFormsInputModel,
@@ -14,7 +16,7 @@ import {
   updateFieldInputModel,
   updateFieldOutputModel,
 } from "./model";
-import { authenticatedProcedure, router } from "../../trpc";
+import { authenticatedProcedure, publicProcedure, router } from "../../trpc";
 import { generatePath } from "../../utils/path-generator";
 import { formService } from "../../services";
 
@@ -65,6 +67,24 @@ export const formRouter = router({
 
       return {
         forms,
+      };
+    }),
+
+  getFormWithFields: publicProcedure
+    .meta({
+      openapi: {
+        method: "GET",
+        path: getPath("/getFormWithFields"),
+        tags: TAGS,
+      },
+    })
+    .input(getFormWithFieldsInputModel)
+    .output(getFormWithFieldsOutputModel)
+    .query(async ({ input }) => {
+      const { form } = await formService.getFormWithFields(input);
+
+      return {
+        form,
       };
     }),
 

@@ -63,13 +63,7 @@ export const useCreateField = () => {
 };
 
 export const useField = (id: string, options?: UseFieldOptions) => {
-  const {
-    data,
-    error,
-    isFetched,
-    isLoading,
-    isPending,
-  } = trpc.form.getField.useQuery(
+  const { data, error, isFetched, isLoading, isPending } = trpc.form.getField.useQuery(
     { id },
     {
       enabled: options?.enabled ?? Boolean(id),
@@ -86,13 +80,7 @@ export const useField = (id: string, options?: UseFieldOptions) => {
 };
 
 export const useFormFields = (formId: string, options?: UseFieldOptions) => {
-  const {
-    data,
-    error,
-    isFetched,
-    isLoading,
-    isPending,
-  } = trpc.form.listFields.useQuery(
+  const { data, error, isFetched, isLoading, isPending } = trpc.form.listFields.useQuery(
     { formId },
     {
       enabled: options?.enabled ?? Boolean(formId),
@@ -101,6 +89,24 @@ export const useFormFields = (formId: string, options?: UseFieldOptions) => {
 
   return {
     fields: data?.fields ?? [],
+    error,
+    isFetched,
+    isLoading,
+    isPending,
+  };
+};
+
+export const useFormWithFields = (formId: string, options?: UseFieldOptions) => {
+  const { data, error, isFetched, isLoading, isPending } = trpc.form.getFormWithFields.useQuery(
+    { formId },
+    {
+      enabled: options?.enabled ?? Boolean(formId),
+    },
+  );
+
+  return {
+    form: data?.form,
+    fields: data?.form.fields ?? [],
     error,
     isFetched,
     isLoading,
@@ -167,13 +173,7 @@ export const useDeleteField = () => {
 };
 
 export const useForms = () => {
-  const {
-    data,
-    error,
-    isFetched,
-    isLoading,
-    isPending,
-  } = trpc.form.listForms.useQuery();
+  const { data, error, isFetched, isLoading, isPending } = trpc.form.listForms.useQuery();
 
   return {
     forms: data?.forms ?? [],

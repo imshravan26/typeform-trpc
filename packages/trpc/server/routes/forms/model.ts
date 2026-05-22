@@ -26,6 +26,10 @@ export const listFormsOutputModel = z.object({
   ),
 });
 
+export const getFormWithFieldsInputModel = z.object({
+  formId: z.string().describe("id of the form to get"),
+});
+
 export const createFieldInputModel = z.object({
   label: z.string().min(1).max(255).describe("label of the field"),
   description: z.string().optional().nullable().describe("description of the field"),
@@ -68,6 +72,18 @@ export const listFieldsInputModel = z.object({
 
 export const listFieldsOutputModel = z.object({
   fields: z.array(fieldOutputModel),
+});
+
+export const getFormWithFieldsOutputModel = z.object({
+  form: z.object({
+    id: z.string().describe("id of the form"),
+    title: z.string().describe("title of the form"),
+    description: z.string().optional().nullable().describe("description of the form"),
+    createdBy: z.string().describe("id of the user who created the form"),
+    createdAt: z.date().optional().nullable().describe("created date of the form"),
+    updatedAt: z.date().optional().nullable().describe("updated date of the form"),
+    fields: z.array(fieldOutputModel),
+  }),
 });
 
 export const updateFieldInputModel = z.object({

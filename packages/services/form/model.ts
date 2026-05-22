@@ -12,6 +12,10 @@ export const listFormsByUserIdInput = z.object({
   userId: z.string().describe("uuid of the user whose forms should be listed"),
 });
 
+export const getFormWithFieldsInput = z.object({
+  formId: z.string().describe("uuid of the form to get with its fields"),
+});
+
 export const createFieldInput = z.object({
   label: z.string().min(1).max(255).describe("label of the field"),
   description: z.string().optional().nullable().describe("description of the field"),
@@ -46,6 +50,7 @@ export const listFieldsByFormIdInput = z.object({
 
 export type CreateFormInputType = z.infer<typeof createFormInput>;
 export type ListFormsByUserIdInputType = z.infer<typeof listFormsByUserIdInput>;
+export type GetFormWithFieldsInputType = z.infer<typeof getFormWithFieldsInput>;
 export type CreateFieldInputType = z.infer<typeof createFieldInput>;
 export type UpdateFieldInputType = z.infer<typeof updateFieldInput>;
 export type DeleteFieldInputType = z.infer<typeof deleteFieldInput>;
