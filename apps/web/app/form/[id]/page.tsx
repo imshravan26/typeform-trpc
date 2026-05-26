@@ -109,6 +109,19 @@ export default function PublicFormPage() {
     );
   }
 
+  if (!form.isPublished) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-muted/30 p-6">
+        <Card className="w-full max-w-xl">
+          <CardHeader>
+            <CardTitle>{form.title}</CardTitle>
+            <CardDescription>This form is currently closed for submissions.</CardDescription>
+          </CardHeader>
+        </Card>
+      </main>
+    );
+  }
+
   return (
     <main className="flex min-h-screen items-center justify-center bg-muted/30 p-6">
       <Card className="w-full max-w-xl">

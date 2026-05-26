@@ -143,6 +143,35 @@ export const useUpdateField = () => {
   };
 };
 
+export const useReorderFields = () => {
+  const utils = trpc.useUtils();
+  const {
+    mutateAsync: reorderFieldsAsync,
+    mutate: reorderFields,
+    error,
+    failureCount,
+    isError,
+    isIdle,
+    isSuccess,
+    isPending,
+  } = trpc.form.reorderFields.useMutation({
+    onSuccess: async () => {
+      await utils.form.invalidate();
+    },
+  });
+
+  return {
+    reorderFieldsAsync,
+    reorderFields,
+    error,
+    failureCount,
+    isError,
+    isIdle,
+    isSuccess,
+    isPending,
+  };
+};
+
 export const useDeleteField = () => {
   const utils = trpc.useUtils();
   const {
@@ -163,6 +192,35 @@ export const useDeleteField = () => {
   return {
     deleteFieldAsync,
     deleteField,
+    error,
+    failureCount,
+    isError,
+    isIdle,
+    isSuccess,
+    isPending,
+  };
+};
+
+export const useUpdateFormPublishStatus = () => {
+  const utils = trpc.useUtils();
+  const {
+    mutateAsync: updateFormPublishStatusAsync,
+    mutate: updateFormPublishStatus,
+    error,
+    failureCount,
+    isError,
+    isIdle,
+    isSuccess,
+    isPending,
+  } = trpc.form.updateFormPublishStatus.useMutation({
+    onSuccess: async () => {
+      await utils.form.invalidate();
+    },
+  });
+
+  return {
+    updateFormPublishStatusAsync,
+    updateFormPublishStatus,
     error,
     failureCount,
     isError,

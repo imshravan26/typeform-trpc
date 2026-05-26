@@ -10,11 +10,13 @@ import {
   getFormWithFieldsInput,
   listFieldsByFormIdInput,
   listFormsByUserIdInput,
+  reorderFieldsInput,
   updateFieldInput,
   createFormSubmissionInput,
   deleteFormSubmissionInput,
   getFormSubmissionInput,
   listFormSubmissionsByFormIdInput,
+  updateFormPublishStatusInput,
   type CreateFieldInputType,
   type CreateFormInputType,
   type CreateFormSubmissionInputType,
@@ -26,7 +28,9 @@ import {
   type ListFormSubmissionsByFormIdInputType,
   type ListFieldsByFormIdInputType,
   type ListFormsByUserIdInputType,
+  type ReorderFieldsInputType,
   type UpdateFieldInputType,
+  type UpdateFormPublishStatusInputType,
 } from "./model";
 
 const getLabelKey = (label: string) =>
@@ -70,6 +74,7 @@ class FormService {
         createdBy: formsTable.createdBy,
         createdAt: formsTable.createdAt,
         updatedAt: formsTable.updatedAt,
+        isPublished: formsTable.isPublished,
       })
       .from(formsTable)
       .where(eq(formsTable.createdBy, userId));
@@ -91,6 +96,7 @@ class FormService {
           createdBy: formsTable.createdBy,
           createdAt: formsTable.createdAt,
           updatedAt: formsTable.updatedAt,
+          isPublished: formsTable.isPublished,
         },
         field: {
           id: formFieldsTable.id,
@@ -120,6 +126,40 @@ class FormService {
 
     return {
       form,
+    };
+  }
+
+  public async updateFormPublishStatus(payload: UpdateFormPublishStatusInputType) {
+    const { formId, userId, isPublished } = await updateFormPublishStatusInput.parseAsync(payload);
+
+    const form = await db
+      .select({
+        id: formsTable.id,
+        createdBy: formsTable.createdBy,
+      })
+      .from(formsTable)
+      .where(eq(formsTable.id, formId));
+
+    if (!form || form.length === 0 || !form[0]) throw new Error("Form not found");
+    if (form[0].createdBy !== userId) throw new Error("User does not own this form");
+
+    const formUpdateResult = await db
+      .update(formsTable)
+      .set({
+        isPublished,
+      })
+      .where(eq(formsTable.id, formId))
+      .returning({
+        id: formsTable.id,
+        isPublished: formsTable.isPublished,
+      });
+
+    if (!formUpdateResult || formUpdateResult.length === 0 || !formUpdateResult[0]?.id)
+      throw new Error("Form not found");
+
+    return {
+      id: formUpdateResult[0].id,
+      isPublished: formUpdateResult[0].isPublished,
     };
   }
 
@@ -236,6 +276,60 @@ class FormService {
     };
   }
 
+  public async reorderFields(payload: ReorderFieldsInputType) {
+    const { formId, userId, fields } = await reorderFieldsInput.parseAsync(payload);
+
+    const form = await db
+      .select({
+        id: formsTable.id,
+        createdBy: formsTable.createdBy,
+      })
+      .from(formsTable)
+      .where(eq(formsTable.id, formId));
+
+    if (!form || form.length === 0 || !form[0]) throw new Error("Form not found");
+    if (form[0].createdBy !== userId) throw new Error("User does not own this form");
+
+    const existingFields = await db
+      .select({
+        id: formFieldsTable.id,
+      })
+      .from(formFieldsTable)
+      .where(eq(formFieldsTable.formId, formId));
+
+    const existingFieldIds = new Set(existingFields.map((field) => field.id));
+    const submittedFieldIds = new Set(fields.map((field) => field.id));
+    const hasInvalidField = fields.some((field) => !existingFieldIds.has(field.id));
+
+    if (hasInvalidField) throw new Error("Field not found");
+    if (submittedFieldIds.size !== existingFieldIds.size || fields.length !== existingFields.length)
+      throw new Error("Reorder payload must include every field exactly once");
+
+    await db.transaction(async (tx) => {
+      for (const [fieldIndex, field] of fields.entries()) {
+        await tx
+          .update(formFieldsTable)
+          .set({
+            index: `-${(fieldIndex + 1) * 1000}`,
+          })
+          .where(eq(formFieldsTable.id, field.id));
+      }
+
+      for (const field of fields) {
+        await tx
+          .update(formFieldsTable)
+          .set({
+            index: field.index,
+          })
+          .where(eq(formFieldsTable.id, field.id));
+      }
+    });
+
+    return {
+      formId,
+    };
+  }
+
   public async deleteField(payload: DeleteFieldInputType) {
     const { id } = await deleteFieldInput.parseAsync(payload);
 
@@ -256,6 +350,17 @@ class FormService {
 
   public async createFormSubmission(payload: CreateFormSubmissionInputType) {
     const { formId, values } = await createFormSubmissionInput.parseAsync(payload);
+
+    const form = await db
+      .select({
+        id: formsTable.id,
+        isPublished: formsTable.isPublished,
+      })
+      .from(formsTable)
+      .where(eq(formsTable.id, formId));
+
+    if (!form || form.length === 0 || !form[0]) throw new Error("Form not found");
+    if (!form[0].isPublished) throw new Error("Form is not accepting submissions");
 
     const formSubmissionInsertResult = await db
       .insert(formSubmissionsTable)

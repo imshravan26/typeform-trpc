@@ -1,9 +1,27 @@
 "use client";
 
-import { type FormEvent, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import {
+  closestCenter,
+  DndContext,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { ArrowLeft, Eye, FileText, GripVertical, Pencil, Plus, Trash2 } from "lucide-react";
+import { type SubmitHandler, useForm } from "react-hook-form";
 import { toast } from "sonner";
 
 import { Badge } from "~/components/ui/badge";
@@ -30,7 +48,15 @@ import {
 import { Separator } from "~/components/ui/separator";
 import { Switch } from "~/components/ui/switch";
 import { Textarea } from "~/components/ui/textarea";
-import { useCreateField, useDeleteField, useFormFields, useUpdateField } from "~/hooks/api/forms";
+import {
+  useCreateField,
+  useDeleteField,
+  useFormFields,
+  useFormWithFields,
+  useReorderFields,
+  useUpdateField,
+  useUpdateFormPublishStatus,
+} from "~/hooks/api/forms";
 
 type FieldType = "TEXT" | "EMAIL" | "NUMBER" | "YES_NO" | "PASSWORD";
 
@@ -44,6 +70,14 @@ type CreatedField = {
   index: string;
 };
 
+type FieldFormValues = {
+  label: string;
+  description: string;
+  placeholder: string;
+  type: FieldType;
+  isRequired: boolean;
+};
+
 const fieldTypeLabels: Record<FieldType, string> = {
   TEXT: "Text field",
   EMAIL: "Email field",
@@ -51,6 +85,85 @@ const fieldTypeLabels: Record<FieldType, string> = {
   YES_NO: "Yes / No field",
   PASSWORD: "Password field",
 };
+
+const FIELD_INDEX_STEP = 1000;
+
+const getNextFieldIndex = (fields: CreatedField[]) =>
+  (
+    Math.max(
+      0,
+      ...fields.map((field) => {
+        const index = Number(field.index);
+        return Number.isFinite(index) ? index : 0;
+      }),
+    ) + FIELD_INDEX_STEP
+  ).toString();
+
+const getReindexedFields = (fields: CreatedField[]) =>
+  fields.map((field, index) => ({
+    ...field,
+    index: ((index + 1) * FIELD_INDEX_STEP).toString(),
+  }));
+
+type SortableFieldItemProps = {
+  field: CreatedField;
+  isDisabled: boolean;
+  onEdit: (field: CreatedField) => void;
+  onDelete: (fieldId: string) => void;
+};
+
+function SortableFieldItem({ field, isDisabled, onEdit, onDelete }: SortableFieldItemProps) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: field.id,
+    disabled: isDisabled,
+  });
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={{
+        transform: CSS.Transform.toString(transform),
+        transition,
+      }}
+      className={`flex items-center gap-3 rounded-lg border p-3 ${
+        isDragging ? "bg-muted shadow-sm" : ""
+      }`}
+    >
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon"
+        className="size-8 cursor-grab active:cursor-grabbing"
+        disabled={isDisabled}
+        {...attributes}
+        {...listeners}
+      >
+        <GripVertical className="size-4 text-muted-foreground" />
+        <span className="sr-only">Reorder field</span>
+      </Button>
+      <div className="flex size-9 items-center justify-center rounded-md bg-muted text-muted-foreground">
+        <FileText className="size-4" />
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="flex flex-wrap items-center gap-2">
+          <p className="font-medium">{field.label}</p>
+          {field.isRequired ? <Badge variant="outline">Required</Badge> : null}
+        </div>
+        <p className="text-sm text-muted-foreground">{fieldTypeLabels[field.type]}</p>
+      </div>
+      <div className="flex items-center gap-1">
+        <Button variant="ghost" size="icon" onClick={() => onEdit(field)} disabled={isDisabled}>
+          <Pencil />
+          <span className="sr-only">Edit field</span>
+        </Button>
+        <Button variant="ghost" size="icon" onClick={() => onDelete(field.id)} disabled={isDisabled}>
+          <Trash2 />
+          <span className="sr-only">Delete field</span>
+        </Button>
+      </div>
+    </div>
+  );
+}
 
 export default function FormBuilderPage() {
   const params = useParams<{ id: string }>();
@@ -60,17 +173,34 @@ export default function FormBuilderPage() {
     error: fieldsError,
     isLoading: areFieldsLoading,
   } = useFormFields(formId);
+  const { form } = useFormWithFields(formId);
   const { createFieldAsync, isPending: isCreatingField } = useCreateField();
   const { updateFieldAsync, isPending: isUpdatingField } = useUpdateField();
   const { deleteFieldAsync, isPending: isDeletingField } = useDeleteField();
+  const { reorderFieldsAsync, isPending: isReorderingFields } = useReorderFields();
+  const { updateFormPublishStatusAsync, isPending: isUpdatingPublishStatus } =
+    useUpdateFormPublishStatus();
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    }),
+  );
   const [isCreateFieldDialogOpen, setIsCreateFieldDialogOpen] = useState(false);
   const [editingFieldId, setEditingFieldId] = useState<string | null>(null);
   const [createdFields, setCreatedFields] = useState<CreatedField[]>([]);
-  const [fieldLabel, setFieldLabel] = useState("");
-  const [fieldDescription, setFieldDescription] = useState("");
-  const [fieldPlaceholder, setFieldPlaceholder] = useState("");
-  const [fieldType, setFieldType] = useState<FieldType>("TEXT");
-  const [isRequired, setIsRequired] = useState(false);
+  const fieldForm = useForm<FieldFormValues>({
+    defaultValues: {
+      label: "",
+      description: "",
+      placeholder: "",
+      type: "TEXT",
+      isRequired: false,
+    },
+  });
+
+  const selectedFieldType = fieldForm.watch("type");
+  const selectedIsRequired = fieldForm.watch("isRequired");
 
   useEffect(() => {
     setCreatedFields(
@@ -87,20 +217,24 @@ export default function FormBuilderPage() {
   }, [formFields]);
 
   const resetCreateField = () => {
-    setFieldLabel("");
-    setFieldDescription("");
-    setFieldPlaceholder("");
-    setFieldType("TEXT");
-    setIsRequired(false);
+    fieldForm.reset({
+      label: "",
+      description: "",
+      placeholder: "",
+      type: "TEXT",
+      isRequired: false,
+    });
   };
 
   const openEditFieldDialog = (field: CreatedField) => {
     setEditingFieldId(field.id);
-    setFieldLabel(field.label);
-    setFieldDescription(field.description ?? "");
-    setFieldPlaceholder(field.placeholder ?? "");
-    setFieldType(field.type);
-    setIsRequired(field.isRequired);
+    fieldForm.reset({
+      label: field.label,
+      description: field.description ?? "",
+      placeholder: field.placeholder ?? "",
+      type: field.type,
+      isRequired: field.isRequired,
+    });
   };
 
   const closeEditFieldDialog = () => {
@@ -108,12 +242,10 @@ export default function FormBuilderPage() {
     resetCreateField();
   };
 
-  const handleCreateField = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-
-    const trimmedLabel = fieldLabel.trim();
-    const trimmedDescription = fieldDescription.trim();
-    const trimmedPlaceholder = fieldPlaceholder.trim();
+  const handleCreateField: SubmitHandler<FieldFormValues> = async (values) => {
+    const trimmedLabel = values.label.trim();
+    const trimmedDescription = values.description.trim();
+    const trimmedPlaceholder = values.placeholder.trim();
 
     if (!trimmedLabel) {
       toast.error("Add a field label");
@@ -121,13 +253,14 @@ export default function FormBuilderPage() {
     }
 
     try {
+      const nextIndex = getNextFieldIndex(createdFields);
       const { id } = await createFieldAsync({
         label: trimmedLabel,
         description: trimmedDescription || null,
         placeholder: trimmedPlaceholder || null,
-        isRequired,
-        index: (createdFields.length + 1).toString(),
-        type: fieldType,
+        isRequired: values.isRequired,
+        index: nextIndex,
+        type: values.type,
         formId,
       });
 
@@ -138,9 +271,9 @@ export default function FormBuilderPage() {
           label: trimmedLabel,
           description: trimmedDescription || null,
           placeholder: trimmedPlaceholder || null,
-          type: fieldType,
-          isRequired,
-          index: (createdFields.length + 1).toString(),
+          type: values.type,
+          isRequired: values.isRequired,
+          index: nextIndex,
         },
       ]);
       toast.success("Field created");
@@ -151,14 +284,12 @@ export default function FormBuilderPage() {
     }
   };
 
-  const handleUpdateField = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-
+  const handleUpdateField: SubmitHandler<FieldFormValues> = async (values) => {
     if (!editingFieldId) return;
 
-    const trimmedLabel = fieldLabel.trim();
-    const trimmedDescription = fieldDescription.trim();
-    const trimmedPlaceholder = fieldPlaceholder.trim();
+    const trimmedLabel = values.label.trim();
+    const trimmedDescription = values.description.trim();
+    const trimmedPlaceholder = values.placeholder.trim();
 
     if (!trimmedLabel) {
       toast.error("Add a field label");
@@ -171,8 +302,8 @@ export default function FormBuilderPage() {
         label: trimmedLabel,
         description: trimmedDescription || null,
         placeholder: trimmedPlaceholder || null,
-        isRequired,
-        type: fieldType,
+        isRequired: values.isRequired,
+        type: values.type,
       });
 
       setCreatedFields((fields) =>
@@ -183,8 +314,8 @@ export default function FormBuilderPage() {
                 label: trimmedLabel,
                 description: trimmedDescription || null,
                 placeholder: trimmedPlaceholder || null,
-                type: fieldType,
-                isRequired,
+                type: values.type,
+                isRequired: values.isRequired,
               }
             : field,
         ),
@@ -206,6 +337,49 @@ export default function FormBuilderPage() {
     }
   };
 
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (!over || active.id === over.id) return;
+
+    const oldIndex = createdFields.findIndex((field) => field.id === active.id);
+    const newIndex = createdFields.findIndex((field) => field.id === over.id);
+
+    if (oldIndex === -1 || newIndex === -1) return;
+
+    const previousFields = createdFields;
+    const reorderedFields = getReindexedFields(arrayMove(createdFields, oldIndex, newIndex));
+
+    setCreatedFields(reorderedFields);
+
+    try {
+      await reorderFieldsAsync({
+        formId,
+        fields: reorderedFields.map((field) => ({
+          id: field.id,
+          index: field.index,
+        })),
+      });
+      toast.success("Fields reordered");
+    } catch {
+      setCreatedFields(previousFields);
+      toast.error("Failed to reorder fields");
+    }
+  };
+
+  const handleTogglePublishStatus = async () => {
+    try {
+      await updateFormPublishStatusAsync({
+        formId,
+        isPublished: !form?.isPublished,
+      });
+
+      toast.success(form?.isPublished ? "Form unpublished" : "Form published");
+    } catch {
+      toast.error("Failed to update publish status");
+    }
+  };
+
   return (
     <div className="flex flex-1 flex-col">
       <div className="@container/main flex flex-1 flex-col gap-2">
@@ -222,7 +396,9 @@ export default function FormBuilderPage() {
                 <div>
                   <div className="flex flex-wrap items-center gap-2">
                     <h2 className="text-2xl font-semibold tracking-tight">Form Builder</h2>
-                    <Badge variant="outline">Draft</Badge>
+                    <Badge variant={form?.isPublished ? "default" : "outline"}>
+                      {form?.isPublished ? "Published" : "Draft"}
+                    </Badge>
                   </div>
                   <p className="text-sm text-muted-foreground">Configure form {formId}</p>
                 </div>
@@ -232,7 +408,17 @@ export default function FormBuilderPage() {
                   <Eye />
                   Preview
                 </Button>
-                <Button size="sm">Publish</Button>
+                <Button
+                  size="sm"
+                  onClick={handleTogglePublishStatus}
+                  disabled={isUpdatingPublishStatus || !form}
+                >
+                  {isUpdatingPublishStatus
+                    ? "Saving..."
+                    : form?.isPublished
+                      ? "Unpublish"
+                      : "Publish"}
+                </Button>
               </div>
             </div>
 
@@ -281,7 +467,10 @@ export default function FormBuilderPage() {
                           </Button>
                         </DialogTrigger>
                         <DialogContent>
-                          <form onSubmit={handleCreateField} className="grid gap-4">
+                          <form
+                            onSubmit={fieldForm.handleSubmit(handleCreateField)}
+                            className="grid gap-4"
+                          >
                             <DialogHeader>
                               <DialogTitle>Create field</DialogTitle>
                               <DialogDescription>
@@ -293,20 +482,21 @@ export default function FormBuilderPage() {
                               <Label htmlFor="field-label">Label</Label>
                               <Input
                                 id="field-label"
-                                value={fieldLabel}
-                                onChange={(event) => setFieldLabel(event.target.value)}
                                 maxLength={255}
                                 placeholder="What is your email?"
                                 autoFocus
                                 disabled={isCreatingField}
+                                {...fieldForm.register("label", { required: true })}
                               />
                             </div>
 
                             <div className="grid gap-2">
                               <Label htmlFor="field-type">Type</Label>
                               <Select
-                                value={fieldType}
-                                onValueChange={(value) => setFieldType(value as FieldType)}
+                                value={selectedFieldType}
+                                onValueChange={(value) =>
+                                  fieldForm.setValue("type", value as FieldType)
+                                }
                                 disabled={isCreatingField}
                               >
                                 <SelectTrigger id="field-type" className="w-full">
@@ -326,10 +516,9 @@ export default function FormBuilderPage() {
                               <Label htmlFor="field-placeholder">Placeholder</Label>
                               <Input
                                 id="field-placeholder"
-                                value={fieldPlaceholder}
-                                onChange={(event) => setFieldPlaceholder(event.target.value)}
                                 placeholder="name@example.com"
                                 disabled={isCreatingField}
+                                {...fieldForm.register("placeholder")}
                               />
                             </div>
 
@@ -337,10 +526,9 @@ export default function FormBuilderPage() {
                               <Label htmlFor="field-description">Description</Label>
                               <Textarea
                                 id="field-description"
-                                value={fieldDescription}
-                                onChange={(event) => setFieldDescription(event.target.value)}
                                 placeholder="Shown below the question."
                                 disabled={isCreatingField}
+                                {...fieldForm.register("description")}
                               />
                             </div>
 
@@ -353,8 +541,10 @@ export default function FormBuilderPage() {
                               </div>
                               <Switch
                                 id="field-required"
-                                checked={isRequired}
-                                onCheckedChange={setIsRequired}
+                                checked={selectedIsRequired}
+                                onCheckedChange={(checked) =>
+                                  fieldForm.setValue("isRequired", checked)
+                                }
                                 disabled={isCreatingField}
                               />
                             </div>
@@ -391,46 +581,30 @@ export default function FormBuilderPage() {
                         No fields added yet.
                       </div>
                     ) : (
-                      createdFields.map((field) => (
-                        <div
-                          key={field.id}
-                          className="flex items-center gap-3 rounded-lg border p-3"
+                      <DndContext
+                        sensors={sensors}
+                        collisionDetection={closestCenter}
+                        onDragEnd={handleDragEnd}
+                      >
+                        <SortableContext
+                          items={createdFields.map((field) => field.id)}
+                          strategy={verticalListSortingStrategy}
                         >
-                          <GripVertical className="size-4 text-muted-foreground" />
-                          <div className="flex size-9 items-center justify-center rounded-md bg-muted text-muted-foreground">
-                            <FileText className="size-4" />
+                          <div className="grid gap-3">
+                            {createdFields.map((field) => (
+                              <SortableFieldItem
+                                key={field.id}
+                                field={field}
+                                isDisabled={
+                                  isUpdatingField || isDeletingField || isReorderingFields
+                                }
+                                onEdit={openEditFieldDialog}
+                                onDelete={handleDeleteField}
+                              />
+                            ))}
                           </div>
-                          <div className="min-w-0 flex-1">
-                            <div className="flex flex-wrap items-center gap-2">
-                              <p className="font-medium">{field.label}</p>
-                              {field.isRequired ? <Badge variant="outline">Required</Badge> : null}
-                            </div>
-                            <p className="text-sm text-muted-foreground">
-                              {fieldTypeLabels[field.type]}
-                            </p>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => openEditFieldDialog(field)}
-                              disabled={isUpdatingField || isDeletingField}
-                            >
-                              <Pencil />
-                              <span className="sr-only">Edit field</span>
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleDeleteField(field.id)}
-                              disabled={isUpdatingField || isDeletingField}
-                            >
-                              <Trash2 />
-                              <span className="sr-only">Delete field</span>
-                            </Button>
-                          </div>
-                        </div>
-                      ))
+                        </SortableContext>
+                      </DndContext>
                     )}
                   </CardContent>
                 </Card>
@@ -444,7 +618,9 @@ export default function FormBuilderPage() {
                 <CardContent className="grid gap-4 text-sm">
                   <div className="flex items-center justify-between gap-3">
                     <span className="text-muted-foreground">Status</span>
-                    <Badge variant="outline">Draft</Badge>
+                    <Badge variant={form?.isPublished ? "default" : "outline"}>
+                      {form?.isPublished ? "Published" : "Draft"}
+                    </Badge>
                   </div>
                   <Separator />
                   <div className="flex items-center justify-between gap-3">
@@ -469,7 +645,7 @@ export default function FormBuilderPage() {
         }}
       >
         <DialogContent>
-          <form onSubmit={handleUpdateField} className="grid gap-4">
+          <form onSubmit={fieldForm.handleSubmit(handleUpdateField)} className="grid gap-4">
             <DialogHeader>
               <DialogTitle>Edit field</DialogTitle>
               <DialogDescription>Update this question and its response settings.</DialogDescription>
@@ -479,19 +655,18 @@ export default function FormBuilderPage() {
               <Label htmlFor="edit-field-label">Label</Label>
               <Input
                 id="edit-field-label"
-                value={fieldLabel}
-                onChange={(event) => setFieldLabel(event.target.value)}
                 maxLength={255}
                 placeholder="What is your email?"
                 disabled={isUpdatingField}
+                {...fieldForm.register("label", { required: true })}
               />
             </div>
 
             <div className="grid gap-2">
               <Label htmlFor="edit-field-type">Type</Label>
               <Select
-                value={fieldType}
-                onValueChange={(value) => setFieldType(value as FieldType)}
+                value={selectedFieldType}
+                onValueChange={(value) => fieldForm.setValue("type", value as FieldType)}
                 disabled={isUpdatingField}
               >
                 <SelectTrigger id="edit-field-type" className="w-full">
@@ -511,10 +686,9 @@ export default function FormBuilderPage() {
               <Label htmlFor="edit-field-placeholder">Placeholder</Label>
               <Input
                 id="edit-field-placeholder"
-                value={fieldPlaceholder}
-                onChange={(event) => setFieldPlaceholder(event.target.value)}
                 placeholder="name@example.com"
                 disabled={isUpdatingField}
+                {...fieldForm.register("placeholder")}
               />
             </div>
 
@@ -522,10 +696,9 @@ export default function FormBuilderPage() {
               <Label htmlFor="edit-field-description">Description</Label>
               <Textarea
                 id="edit-field-description"
-                value={fieldDescription}
-                onChange={(event) => setFieldDescription(event.target.value)}
                 placeholder="Shown below the question."
                 disabled={isUpdatingField}
+                {...fieldForm.register("description")}
               />
             </div>
 
@@ -538,8 +711,8 @@ export default function FormBuilderPage() {
               </div>
               <Switch
                 id="edit-field-required"
-                checked={isRequired}
-                onCheckedChange={setIsRequired}
+                checked={selectedIsRequired}
+                onCheckedChange={(checked) => fieldForm.setValue("isRequired", checked)}
                 disabled={isUpdatingField}
               />
             </div>

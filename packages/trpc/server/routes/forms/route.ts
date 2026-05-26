@@ -21,8 +21,12 @@ import {
   listFormSubmissionsOutputModel,
   listFormsInputModel,
   listFormsOutputModel,
+  reorderFieldsInputModel,
+  reorderFieldsOutputModel,
   updateFieldInputModel,
   updateFieldOutputModel,
+  updateFormPublishStatusInputModel,
+  updateFormPublishStatusOutputModel,
 } from "./model";
 import { authenticatedProcedure, publicProcedure, router } from "../../trpc";
 import { generatePath } from "../../utils/path-generator";
@@ -93,6 +97,30 @@ export const formRouter = router({
 
       return {
         form,
+      };
+    }),
+
+  updateFormPublishStatus: authenticatedProcedure
+    .meta({
+      openapi: {
+        method: "PATCH",
+        path: getPath("/updateFormPublishStatus"),
+        tags: TAGS,
+        protect: true,
+      },
+    })
+    .input(updateFormPublishStatusInputModel)
+    .output(updateFormPublishStatusOutputModel)
+    .mutation(async ({ input, ctx }) => {
+      const { id, isPublished } = await formService.updateFormPublishStatus({
+        formId: input.formId,
+        userId: ctx.user.id,
+        isPublished: input.isPublished,
+      });
+
+      return {
+        id,
+        isPublished,
       };
     }),
 
@@ -169,6 +197,29 @@ export const formRouter = router({
 
       return {
         id,
+      };
+    }),
+
+  reorderFields: authenticatedProcedure
+    .meta({
+      openapi: {
+        method: "PATCH",
+        path: getPath("/reorderFields"),
+        tags: TAGS,
+        protect: true,
+      },
+    })
+    .input(reorderFieldsInputModel)
+    .output(reorderFieldsOutputModel)
+    .mutation(async ({ input, ctx }) => {
+      const { formId } = await formService.reorderFields({
+        formId: input.formId,
+        userId: ctx.user.id,
+        fields: input.fields,
+      });
+
+      return {
+        formId,
       };
     }),
 

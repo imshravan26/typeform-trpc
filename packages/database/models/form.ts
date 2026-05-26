@@ -12,6 +12,7 @@ export const formsTable = pgTable("forms", {
   updatedAt: timestamp("updated_at")
     .$onUpdate(() => new Date())
     .notNull(),
+  isPublished: boolean("is_published").default(false).notNull(),
 });
 
 export type SelectForm = typeof formsTable.$inferSelect;

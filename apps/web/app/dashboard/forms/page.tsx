@@ -1,7 +1,7 @@
 "use client";
 
 import { type FormEvent, useState } from "react";
-import { Eye, FileText, MoreVertical, Pencil, Plus } from "lucide-react";
+import { BarChart3, Eye, FileText, MoreVertical, Pencil, Plus } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
 
@@ -248,6 +248,12 @@ export default function FormsPage() {
                                   Edit
                                 </Link>
                               </DropdownMenuItem>
+                              <DropdownMenuItem asChild>
+                                <Link href={`/dashboard/forms/${form.id}/submissions`}>
+                                  <BarChart3 />
+                                  Submissions
+                                </Link>
+                              </DropdownMenuItem>
                               <DropdownMenuSeparator />
                               <DropdownMenuItem>Copy link</DropdownMenuItem>
                             </DropdownMenuContent>
@@ -257,17 +263,27 @@ export default function FormsPage() {
                     </CardHeader>
                     <CardContent className="grid gap-4">
                       <div className="flex items-center justify-between gap-3">
-                        <Badge variant="outline">Draft</Badge>
+                        <Badge variant={form.isPublished ? "default" : "outline"}>
+                          {form.isPublished ? "Published" : "Draft"}
+                        </Badge>
                         <span className="text-xs text-muted-foreground">
                           Created {formatDate(form.createdAt)}
                         </span>
                       </div>
-                      <Button asChild className="w-full">
-                        <Link href={`/dashboard/forms/${form.id}`}>
-                          <Pencil />
-                          Open Builder
-                        </Link>
-                      </Button>
+                      <div className="grid grid-cols-2 gap-2">
+                        <Button asChild variant="outline" className="w-full">
+                          <Link href={`/dashboard/forms/${form.id}/submissions`}>
+                            <BarChart3 />
+                            Submissions
+                          </Link>
+                        </Button>
+                        <Button asChild className="w-full">
+                          <Link href={`/dashboard/forms/${form.id}`}>
+                            <Pencil />
+                            Builder
+                          </Link>
+                        </Button>
+                      </div>
                     </CardContent>
                   </Card>
                 ))}

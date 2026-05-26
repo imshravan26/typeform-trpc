@@ -16,6 +16,12 @@ export const getFormWithFieldsInput = z.object({
   formId: z.string().describe("uuid of the form to get with its fields"),
 });
 
+export const updateFormPublishStatusInput = z.object({
+  formId: z.string().describe("uuid of the form to update"),
+  userId: z.string().describe("uuid of the user who owns the form"),
+  isPublished: z.boolean().describe("whether the form is published"),
+});
+
 export const createFieldInput = z.object({
   label: z.string().min(1).max(255).describe("label of the field"),
   description: z.string().optional().nullable().describe("description of the field"),
@@ -34,6 +40,19 @@ export const updateFieldInput = z.object({
   isRequired: z.boolean().optional().describe("whether the field is required"),
   index: z.string().optional().describe("index of the field in the form"),
   type: fieldType.optional().describe("type of the field"),
+});
+
+export const reorderFieldsInput = z.object({
+  formId: z.string().describe("uuid of the form whose fields should be reordered"),
+  userId: z.string().describe("uuid of the user who owns the form"),
+  fields: z
+    .array(
+      z.object({
+        id: z.string().describe("uuid of the field to reorder"),
+        index: z.string().describe("new index of the field in the form"),
+      }),
+    )
+    .describe("ordered fields for the form"),
 });
 
 export const deleteFieldInput = z.object({
@@ -77,8 +96,10 @@ export const deleteFormSubmissionInput = z.object({
 export type CreateFormInputType = z.infer<typeof createFormInput>;
 export type ListFormsByUserIdInputType = z.infer<typeof listFormsByUserIdInput>;
 export type GetFormWithFieldsInputType = z.infer<typeof getFormWithFieldsInput>;
+export type UpdateFormPublishStatusInputType = z.infer<typeof updateFormPublishStatusInput>;
 export type CreateFieldInputType = z.infer<typeof createFieldInput>;
 export type UpdateFieldInputType = z.infer<typeof updateFieldInput>;
+export type ReorderFieldsInputType = z.infer<typeof reorderFieldsInput>;
 export type DeleteFieldInputType = z.infer<typeof deleteFieldInput>;
 export type GetFieldInputType = z.infer<typeof getFieldInput>;
 export type ListFieldsByFormIdInputType = z.infer<typeof listFieldsByFormIdInput>;

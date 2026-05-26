@@ -22,6 +22,7 @@ export const listFormsOutputModel = z.object({
       createdBy: z.string().describe("id of the user who created the form"),
       createdAt: z.date().optional().nullable().describe("created date of the form"),
       updatedAt: z.date().optional().nullable().describe("updated date of the form"),
+      isPublished: z.boolean().describe("whether the form is published"),
     }),
   ),
 });
@@ -82,8 +83,19 @@ export const getFormWithFieldsOutputModel = z.object({
     createdBy: z.string().describe("id of the user who created the form"),
     createdAt: z.date().optional().nullable().describe("created date of the form"),
     updatedAt: z.date().optional().nullable().describe("updated date of the form"),
+    isPublished: z.boolean().describe("whether the form is published"),
     fields: z.array(fieldOutputModel),
   }),
+});
+
+export const updateFormPublishStatusInputModel = z.object({
+  formId: z.string().describe("id of the form to update"),
+  isPublished: z.boolean().describe("whether the form is published"),
+});
+
+export const updateFormPublishStatusOutputModel = z.object({
+  id: z.string().describe("id of the updated form"),
+  isPublished: z.boolean().describe("updated published state of the form"),
 });
 
 export const updateFieldInputModel = z.object({
@@ -98,6 +110,20 @@ export const updateFieldInputModel = z.object({
 
 export const updateFieldOutputModel = z.object({
   id: z.string().describe("id of the updated field"),
+});
+
+export const reorderFieldsInputModel = z.object({
+  formId: z.string().describe("id of the form whose fields should be reordered"),
+  fields: z.array(
+    z.object({
+      id: z.string().describe("id of the field to reorder"),
+      index: z.string().describe("new index of the field in the form"),
+    }),
+  ),
+});
+
+export const reorderFieldsOutputModel = z.object({
+  formId: z.string().describe("id of the reordered form"),
 });
 
 export const deleteFieldInputModel = z.object({
