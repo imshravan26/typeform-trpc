@@ -1,6 +1,7 @@
 import { asc, db, eq } from "@repo/database";
 import { formFieldsTable } from "@repo/database/models/formFields";
 import { formsTable } from "@repo/database/models/form";
+import { formSubmissionsTable } from "@repo/database/models/form-submissions";
 import {
   createFieldInput,
   createFormInput,
@@ -10,11 +11,19 @@ import {
   listFieldsByFormIdInput,
   listFormsByUserIdInput,
   updateFieldInput,
+  createFormSubmissionInput,
+  deleteFormSubmissionInput,
+  getFormSubmissionInput,
+  listFormSubmissionsByFormIdInput,
   type CreateFieldInputType,
   type CreateFormInputType,
+  type CreateFormSubmissionInputType,
+  type DeleteFormSubmissionInputType,
   type DeleteFieldInputType,
   type GetFieldInputType,
+  type GetFormSubmissionInputType,
   type GetFormWithFieldsInputType,
+  type ListFormSubmissionsByFormIdInputType,
   type ListFieldsByFormIdInputType,
   type ListFormsByUserIdInputType,
   type UpdateFieldInputType,
@@ -242,6 +251,95 @@ class FormService {
 
     return {
       id: fieldDeleteResult[0].id,
+    };
+  }
+
+  public async createFormSubmission(payload: CreateFormSubmissionInputType) {
+    const { formId, values } = await createFormSubmissionInput.parseAsync(payload);
+
+    const formSubmissionInsertResult = await db
+      .insert(formSubmissionsTable)
+      .values({
+        formId,
+        values,
+      })
+      .returning({
+        id: formSubmissionsTable.id,
+      });
+
+    if (
+      !formSubmissionInsertResult ||
+      formSubmissionInsertResult.length === 0 ||
+      !formSubmissionInsertResult[0]?.id
+    )
+      throw new Error("something went wrong");
+
+    return {
+      id: formSubmissionInsertResult[0].id,
+    };
+  }
+
+  public async getFormSubmission(payload: GetFormSubmissionInputType) {
+    const { id } = await getFormSubmissionInput.parseAsync(payload);
+
+    const submission = await db
+      .select({
+        id: formSubmissionsTable.id,
+        formId: formSubmissionsTable.formId,
+        values: formSubmissionsTable.values,
+        createdAt: formSubmissionsTable.createdAt,
+        updatedAt: formSubmissionsTable.updatedAt,
+      })
+      .from(formSubmissionsTable)
+      .where(eq(formSubmissionsTable.id, id));
+
+    if (!submission || submission.length === 0 || !submission[0])
+      throw new Error("Form submission not found");
+
+    return {
+      submission: submission[0],
+    };
+  }
+
+  public async listFormSubmissionsByFormId(payload: ListFormSubmissionsByFormIdInputType) {
+    const { formId } = await listFormSubmissionsByFormIdInput.parseAsync(payload);
+
+    const submissions = await db
+      .select({
+        id: formSubmissionsTable.id,
+        formId: formSubmissionsTable.formId,
+        values: formSubmissionsTable.values,
+        createdAt: formSubmissionsTable.createdAt,
+        updatedAt: formSubmissionsTable.updatedAt,
+      })
+      .from(formSubmissionsTable)
+      .where(eq(formSubmissionsTable.formId, formId))
+      .orderBy(asc(formSubmissionsTable.createdAt));
+
+    return {
+      submissions,
+    };
+  }
+
+  public async deleteFormSubmission(payload: DeleteFormSubmissionInputType) {
+    const { id } = await deleteFormSubmissionInput.parseAsync(payload);
+
+    const formSubmissionDeleteResult = await db
+      .delete(formSubmissionsTable)
+      .where(eq(formSubmissionsTable.id, id))
+      .returning({
+        id: formSubmissionsTable.id,
+      });
+
+    if (
+      !formSubmissionDeleteResult ||
+      formSubmissionDeleteResult.length === 0 ||
+      !formSubmissionDeleteResult[0]?.id
+    )
+      throw new Error("Form submission not found");
+
+    return {
+      id: formSubmissionDeleteResult[0].id,
     };
   }
 }

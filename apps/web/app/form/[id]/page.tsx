@@ -2,6 +2,7 @@
 
 import { type FormEvent, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
+import { toast } from "sonner";
 
 import { Button } from "~/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/components/ui/card";
@@ -14,7 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "~/components/ui/select";
-import { useFormWithFields } from "~/hooks/api/forms";
+import { useCreateFormSubmission, useFormWithFields } from "~/hooks/api/forms";
 
 type FieldType = "TEXT" | "EMAIL" | "NUMBER" | "YES_NO" | "PASSWORD";
 
@@ -50,6 +51,7 @@ export default function PublicFormPage() {
   const params = useParams<{ id: string }>();
   const formId = params.id;
   const { form, fields, error, isLoading } = useFormWithFields(formId);
+  const { createFormSubmissionAsync, isPending: isSubmitting } = useCreateFormSubmission();
   const [values, setValues] = useState<Record<string, string>>({});
 
   const sortedFields = useMemo(
@@ -61,18 +63,32 @@ export default function PublicFormPage() {
     setValues((current) => ({ ...current, [fieldId]: value }));
   };
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    const submission = sortedFields.reduce<Record<string, string>>((acc, field) => {
-      acc[field.labelKey] = values[field.id] ?? "";
-      return acc;
-    }, {});
+    const missingRequiredField = sortedFields.find(
+      (field) => field.isRequired && !values[field.id]?.trim(),
+    );
 
-    console.log("Form submission:", {
-      formId,
-      values: submission,
-    });
+    if (missingRequiredField) {
+      toast.error(`Answer "${missingRequiredField.label}" before submitting`);
+      return;
+    }
+
+    try {
+      await createFormSubmissionAsync({
+        formId,
+        values: sortedFields.map((field) => ({
+          formFieldId: field.id,
+          value: values[field.id] ?? "",
+        })),
+      });
+
+      toast.success("Form submitted");
+      setValues({});
+    } catch {
+      toast.error("Failed to submit form");
+    }
   };
 
   if (isLoading) {
@@ -124,6 +140,7 @@ export default function PublicFormPage() {
                       value={values[field.id] ?? ""}
                       onValueChange={(value) => handleFieldChange(field.id, value)}
                       required={Boolean(field.isRequired)}
+                      disabled={isSubmitting}
                     >
                       <SelectTrigger id={field.id} className="w-full">
                         <SelectValue placeholder={field.placeholder ?? "Select an answer"} />
@@ -141,14 +158,15 @@ export default function PublicFormPage() {
                       onChange={(event) => handleFieldChange(field.id, event.target.value)}
                       placeholder={field.placeholder ?? undefined}
                       required={Boolean(field.isRequired)}
+                      disabled={isSubmitting}
                     />
                   )}
                 </div>
               ))
             )}
 
-            <Button type="submit" disabled={sortedFields.length === 0}>
-              Submit
+            <Button type="submit" disabled={sortedFields.length === 0 || isSubmitting}>
+              {isSubmitting ? "Submitting..." : "Submit"}
             </Button>
           </form>
         </CardContent>

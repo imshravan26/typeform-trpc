@@ -3,14 +3,22 @@ import {
   createFieldOutputModel,
   createFormInputModel,
   createFormOutputModel,
+  createFormSubmissionInputModel,
+  createFormSubmissionOutputModel,
   deleteFieldInputModel,
   deleteFieldOutputModel,
+  deleteFormSubmissionInputModel,
+  deleteFormSubmissionOutputModel,
   getFieldInputModel,
   getFieldOutputModel,
+  getFormSubmissionInputModel,
+  getFormSubmissionOutputModel,
   getFormWithFieldsInputModel,
   getFormWithFieldsOutputModel,
   listFieldsInputModel,
   listFieldsOutputModel,
+  listFormSubmissionsInputModel,
+  listFormSubmissionsOutputModel,
   listFormsInputModel,
   listFormsOutputModel,
   updateFieldInputModel,
@@ -177,6 +185,81 @@ export const formRouter = router({
     .output(deleteFieldOutputModel)
     .mutation(async ({ input }) => {
       const { id } = await formService.deleteField(input);
+
+      return {
+        id,
+      };
+    }),
+
+  createFormSubmission: publicProcedure
+    .meta({
+      openapi: {
+        method: "POST",
+        path: getPath("/createFormSubmission"),
+        tags: TAGS,
+      },
+    })
+    .input(createFormSubmissionInputModel)
+    .output(createFormSubmissionOutputModel)
+    .mutation(async ({ input }) => {
+      const { id } = await formService.createFormSubmission(input);
+
+      return {
+        id,
+      };
+    }),
+
+  getFormSubmission: authenticatedProcedure
+    .meta({
+      openapi: {
+        method: "GET",
+        path: getPath("/getFormSubmission"),
+        tags: TAGS,
+        protect: true,
+      },
+    })
+    .input(getFormSubmissionInputModel)
+    .output(getFormSubmissionOutputModel)
+    .query(async ({ input }) => {
+      const { submission } = await formService.getFormSubmission(input);
+
+      return {
+        submission,
+      };
+    }),
+
+  listFormSubmissions: authenticatedProcedure
+    .meta({
+      openapi: {
+        method: "GET",
+        path: getPath("/listFormSubmissions"),
+        tags: TAGS,
+        protect: true,
+      },
+    })
+    .input(listFormSubmissionsInputModel)
+    .output(listFormSubmissionsOutputModel)
+    .query(async ({ input }) => {
+      const { submissions } = await formService.listFormSubmissionsByFormId(input);
+
+      return {
+        submissions,
+      };
+    }),
+
+  deleteFormSubmission: authenticatedProcedure
+    .meta({
+      openapi: {
+        method: "DELETE",
+        path: getPath("/deleteFormSubmission"),
+        tags: TAGS,
+        protect: true,
+      },
+    })
+    .input(deleteFormSubmissionInputModel)
+    .output(deleteFormSubmissionOutputModel)
+    .mutation(async ({ input }) => {
+      const { id } = await formService.deleteFormSubmission(input);
 
       return {
         id,

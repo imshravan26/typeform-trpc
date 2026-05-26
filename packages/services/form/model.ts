@@ -48,6 +48,32 @@ export const listFieldsByFormIdInput = z.object({
   formId: z.string().describe("uuid of the form whose fields should be listed"),
 });
 
+export const createFormSubmissionInput = z.object({
+  formId: z.string().describe("uuid of the form being submitted"),
+  values: z
+    .array(
+      z
+        .object({
+          formFieldId: z.string().describe("uuid of the form field"),
+          value: z.string().describe("value of the form field"),
+        })
+        .describe("value of the form field"),
+    )
+    .describe("array of values for the form fields"),
+});
+
+export const getFormSubmissionInput = z.object({
+  id: z.string().describe("uuid of the form submission to get"),
+});
+
+export const listFormSubmissionsByFormIdInput = z.object({
+  formId: z.string().describe("uuid of the form whose submissions should be listed"),
+});
+
+export const deleteFormSubmissionInput = z.object({
+  id: z.string().describe("uuid of the form submission to delete"),
+});
+
 export type CreateFormInputType = z.infer<typeof createFormInput>;
 export type ListFormsByUserIdInputType = z.infer<typeof listFormsByUserIdInput>;
 export type GetFormWithFieldsInputType = z.infer<typeof getFormWithFieldsInput>;
@@ -56,3 +82,7 @@ export type UpdateFieldInputType = z.infer<typeof updateFieldInput>;
 export type DeleteFieldInputType = z.infer<typeof deleteFieldInput>;
 export type GetFieldInputType = z.infer<typeof getFieldInput>;
 export type ListFieldsByFormIdInputType = z.infer<typeof listFieldsByFormIdInput>;
+export type CreateFormSubmissionInputType = z.infer<typeof createFormSubmissionInput>;
+export type GetFormSubmissionInputType = z.infer<typeof getFormSubmissionInput>;
+export type ListFormSubmissionsByFormIdInputType = z.infer<typeof listFormSubmissionsByFormIdInput>;
+export type DeleteFormSubmissionInputType = z.infer<typeof deleteFormSubmissionInput>;

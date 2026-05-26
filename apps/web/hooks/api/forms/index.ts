@@ -172,6 +172,35 @@ export const useDeleteField = () => {
   };
 };
 
+export const useCreateFormSubmission = () => {
+  const utils = trpc.useUtils();
+  const {
+    mutateAsync: createFormSubmissionAsync,
+    mutate: createFormSubmission,
+    error,
+    failureCount,
+    isError,
+    isIdle,
+    isSuccess,
+    isPending,
+  } = trpc.form.createFormSubmission.useMutation({
+    onSuccess: async () => {
+      await utils.form.invalidate();
+    },
+  });
+
+  return {
+    createFormSubmissionAsync,
+    createFormSubmission,
+    error,
+    failureCount,
+    isError,
+    isIdle,
+    isSuccess,
+    isPending,
+  };
+};
+
 export const useForms = () => {
   const { data, error, isFetched, isLoading, isPending } = trpc.form.listForms.useQuery();
 

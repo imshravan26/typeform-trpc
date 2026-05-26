@@ -107,3 +107,49 @@ export const deleteFieldInputModel = z.object({
 export const deleteFieldOutputModel = z.object({
   id: z.string().describe("id of the deleted field"),
 });
+
+export const formSubmissionValueModel = z.object({
+  formFieldId: z.string().describe("id of the submitted form field"),
+  value: z.string().describe("submitted value of the form field"),
+});
+
+export const createFormSubmissionInputModel = z.object({
+  formId: z.string().describe("id of the form being submitted"),
+  values: z.array(formSubmissionValueModel).describe("submitted form values"),
+});
+
+export const createFormSubmissionOutputModel = z.object({
+  id: z.string().describe("id of the created form submission"),
+});
+
+export const getFormSubmissionInputModel = z.object({
+  id: z.string().describe("id of the form submission to get"),
+});
+
+export const formSubmissionOutputModel = z.object({
+  id: z.string().describe("id of the form submission"),
+  formId: z.string().describe("id of the submitted form"),
+  values: z.array(formSubmissionValueModel).optional().nullable().describe("submitted form values"),
+  createdAt: z.date().optional().nullable().describe("created date of the form submission"),
+  updatedAt: z.date().optional().nullable().describe("updated date of the form submission"),
+});
+
+export const getFormSubmissionOutputModel = z.object({
+  submission: formSubmissionOutputModel,
+});
+
+export const listFormSubmissionsInputModel = z.object({
+  formId: z.string().describe("id of the form whose submissions should be listed"),
+});
+
+export const listFormSubmissionsOutputModel = z.object({
+  submissions: z.array(formSubmissionOutputModel),
+});
+
+export const deleteFormSubmissionInputModel = z.object({
+  id: z.string().describe("id of the form submission to delete"),
+});
+
+export const deleteFormSubmissionOutputModel = z.object({
+  id: z.string().describe("id of the deleted form submission"),
+});
