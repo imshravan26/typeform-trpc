@@ -15,6 +15,7 @@ import {
   getFormSubmissionOutputModel,
   getFormWithFieldsInputModel,
   getFormWithFieldsOutputModel,
+  getFormWithSlugInputModel,
   listFieldsInputModel,
   listFieldsOutputModel,
   listFormSubmissionsInputModel,
@@ -94,6 +95,24 @@ export const formRouter = router({
     .output(getFormWithFieldsOutputModel)
     .query(async ({ input }) => {
       const { form } = await formService.getFormWithFields(input);
+
+      return {
+        form,
+      };
+    }),
+
+  getFormWithSlug: publicProcedure
+    .meta({
+      openapi: {
+        method: "GET",
+        path: getPath("/getFormWithSlug"),
+        tags: TAGS,
+      },
+    })
+    .input(getFormWithSlugInputModel)
+    .output(getFormWithFieldsOutputModel) // same output as getFormWithFields since it returns the form with its fields
+    .query(async ({ input }) => {
+      const { form } = await formService.getFormWithSlug(input);
 
       return {
         form,

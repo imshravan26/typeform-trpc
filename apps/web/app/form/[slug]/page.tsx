@@ -12,7 +12,7 @@ import { FormProgress } from "~/components/form/form-progressbar";
 import { FieldRenderer } from "~/components/form/form-renderer";
 import { ThankYouScreen } from "~/components/form/thank-u-screen";
 import { sortFieldsByIndex, validateField } from "~/lib/form-utils";
-import { useCreateFormSubmission, useFormWithFields } from "~/hooks/api/forms";
+import { useCreateFormSubmission, useFormWithFields, useFormWithSlug } from "~/hooks/api/forms";
 import type { FormField } from "~/types/form";
 
 type Direction = 1 | -1;
@@ -33,10 +33,10 @@ const slideVariants = {
 };
 
 export default function PublicFormPage() {
-  const params = useParams<{ id: string }>();
-  const formId = params.id;
+  const params = useParams<{ slug: string }>();
+  const formSlug = params.slug;
 
-  const { form, fields, error, isLoading } = useFormWithFields(formId);
+  const { form, fields, error, isLoading } = useFormWithSlug(formSlug);
   const { createFormSubmissionAsync, isPending: isSubmitting } = useCreateFormSubmission();
 
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -93,7 +93,7 @@ export default function PublicFormPage() {
 
     try {
       await createFormSubmissionAsync({
-        formId,
+        formId: form!.id,
         values: sortedFields.map((field) => ({
           formFieldId: field.id,
           value: values[field.id] ?? "",
@@ -103,7 +103,7 @@ export default function PublicFormPage() {
     } catch {
       toast.error("Failed to submit. Please try again.");
     }
-  }, [currentField, values, createFormSubmissionAsync, formId, sortedFields]);
+  }, [currentField, values, createFormSubmissionAsync, form, sortedFields]);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {

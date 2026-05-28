@@ -2,6 +2,7 @@ import { asc, db, eq } from "@repo/database";
 import { formFieldsTable } from "@repo/database/models/formFields";
 import { formsTable } from "@repo/database/models/form";
 import { formSubmissionsTable } from "@repo/database/models/form-submissions";
+// import { slugify } from "slugify";
 import {
   createFieldInput,
   createFormInput,
@@ -31,7 +32,10 @@ import {
   type ReorderFieldsInputType,
   type UpdateFieldInputType,
   type UpdateFormPublishStatusInputType,
+  GetFormWithSlugInputType,
+  getFormWithSlugInput,
 } from "./model";
+import { nanoid } from "nanoid";
 
 const getLabelKey = (label: string) =>
   label
@@ -44,10 +48,17 @@ class FormService {
   public async createForm(payload: CreateFormInputType) {
     const { title, description, createdBy } = await createFormInput.parseAsync(payload);
 
+    const baseSlug = getLabelKey(title);
+    let slug = baseSlug;
+
+    const uniqueSuffix = nanoid(6);
+    slug = `${baseSlug}-${uniqueSuffix}`;
+
     const formInsertResult = await db
       .insert(formsTable)
       .values({
         title,
+        slug,
         description,
         createdBy,
       })
@@ -81,6 +92,52 @@ class FormService {
 
     return {
       forms,
+    };
+  }
+
+  public async getFormWithSlug(payload: GetFormWithSlugInputType) {
+    const { slug } = await getFormWithSlugInput.parseAsync(payload);
+    console.log("slug received:", slug);
+
+    const rows = await db
+      .select({
+        form: {
+          id: formsTable.id,
+          title: formsTable.title,
+          description: formsTable.description,
+          createdBy: formsTable.createdBy,
+          createdAt: formsTable.createdAt,
+          updatedAt: formsTable.updatedAt,
+          isPublished: formsTable.isPublished,
+        },
+        field: {
+          id: formFieldsTable.id,
+          label: formFieldsTable.label,
+          labelKey: formFieldsTable.labelKey,
+          description: formFieldsTable.description,
+          placeholder: formFieldsTable.placeholder,
+          isRequired: formFieldsTable.isRequired,
+          index: formFieldsTable.index,
+          type: formFieldsTable.type,
+          formId: formFieldsTable.formId,
+          createdAt: formFieldsTable.createdAt,
+          updatedAt: formFieldsTable.updatedAt,
+        },
+      })
+      .from(formsTable)
+      .leftJoin(formFieldsTable, eq(formsTable.id, formFieldsTable.formId))
+      .where(eq(formsTable.slug, slug))
+      .orderBy(asc(formFieldsTable.index));
+
+    if (!rows || rows.length === 0 || !rows[0]?.form) throw new Error("Form not found");
+
+    const form = {
+      ...rows[0].form,
+      fields: rows.flatMap((row) => (row.field ? [row.field] : [])),
+    };
+
+    return {
+      form,
     };
   }
 

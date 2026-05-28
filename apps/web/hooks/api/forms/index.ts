@@ -114,6 +114,24 @@ export const useFormWithFields = (formId: string, options?: UseFieldOptions) => 
   };
 };
 
+export const useFormWithSlug = (slug: string, options?: UseFieldOptions) => {
+  const { data, error, isFetched, isLoading, isPending } = trpc.form.getFormWithSlug.useQuery(
+    { slug },
+    {
+      enabled: options?.enabled ?? Boolean(slug),
+    },
+  );
+
+  return {
+    form: data?.form,
+    fields: data?.form.fields ?? [],
+    error,
+    isFetched,
+    isLoading,
+    isPending,
+  };
+};
+
 export const useUpdateField = () => {
   const utils = trpc.useUtils();
   const {

@@ -99,6 +99,10 @@ export const getFormWithFieldsOutputModel = z.object({
   }),
 });
 
+export const getFormWithSlugInputModel = z.object({
+  slug: z.string().describe("slug of the form to get"),
+});
+
 export const updateFormPublishStatusInputModel = z.object({
   formId: z.string().describe("id of the form to update"),
   isPublished: z.boolean().describe("whether the form is published"),

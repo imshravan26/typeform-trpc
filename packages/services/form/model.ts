@@ -27,6 +27,10 @@ export const getFormWithFieldsInput = z.object({
   formId: z.string().describe("uuid of the form to get with its fields"),
 });
 
+export const getFormWithSlugInput = z.object({
+  slug: z.string().describe("slug of the form to get"),
+});
+
 export const updateFormPublishStatusInput = z.object({
   formId: z.string().describe("uuid of the form to update"),
   userId: z.string().describe("uuid of the user who owns the form"),
@@ -107,6 +111,7 @@ export const deleteFormSubmissionInput = z.object({
 export type CreateFormInputType = z.infer<typeof createFormInput>;
 export type ListFormsByUserIdInputType = z.infer<typeof listFormsByUserIdInput>;
 export type GetFormWithFieldsInputType = z.infer<typeof getFormWithFieldsInput>;
+export type GetFormWithSlugInputType = z.infer<typeof getFormWithSlugInput>;
 export type UpdateFormPublishStatusInputType = z.infer<typeof updateFormPublishStatusInput>;
 export type CreateFieldInputType = z.infer<typeof createFieldInput>;
 export type UpdateFieldInputType = z.infer<typeof updateFieldInput>;
