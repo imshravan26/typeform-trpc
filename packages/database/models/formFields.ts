@@ -8,17 +8,30 @@ import {
   text,
   numeric,
   unique,
-  PgTable,
+  jsonb,
 } from "drizzle-orm/pg-core";
 import { formsTable } from "./form";
 
-export const fieldTypeEnum = pgEnum("field_type_enum", [
+export const fieldTypeEnum = pgEnum("field_type", [
   "TEXT",
+  "LONG_TEXT",
   "EMAIL",
   "NUMBER",
   "YES_NO",
+  "SELECT",
+  "MULTI_SELECT",
+  "RATING",
+  "DATE",
   "PASSWORD",
 ]);
+
+export type FieldConfig = {
+  options?: string[]; // SELECT / MULTI_SELECT
+  maxRating?: number; // RATING (default 5)
+  minValue?: number; // NUMBER
+  maxValue?: number;
+  maxLength?: number; // TEXT / LONG_TEXT
+};
 
 export const formFieldsTable = pgTable(
   "form_fields",
@@ -30,10 +43,11 @@ export const formFieldsTable = pgTable(
     placeholder: text("placeholder"),
     isRequired: boolean("is_required").default(false).notNull(),
     index: numeric("index", { scale: 2 }).notNull(),
-    type: fieldTypeEnum("type").notNull(),
     formId: uuid("form_id")
       .references(() => formsTable.id)
       .notNull(),
+    type: fieldTypeEnum("type").notNull(),
+    config: jsonb("config").$type<FieldConfig>().default({}),
 
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at")

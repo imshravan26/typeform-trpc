@@ -52,7 +52,7 @@ export const formRouter = router({
 
       const { id } = await formService.createForm({
         title,
-        description,
+        description: description ?? null,
         createdBy: ctx.user.id,
       });
 

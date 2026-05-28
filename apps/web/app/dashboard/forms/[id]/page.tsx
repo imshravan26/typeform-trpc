@@ -58,7 +58,17 @@ import {
   useUpdateFormPublishStatus,
 } from "~/hooks/api/forms";
 
-type FieldType = "TEXT" | "EMAIL" | "NUMBER" | "YES_NO" | "PASSWORD";
+type FieldType =
+  | "TEXT"
+  | "LONG_TEXT"
+  | "EMAIL"
+  | "NUMBER"
+  | "YES_NO"
+  | "SELECT"
+  | "MULTI_SELECT"
+  | "RATING"
+  | "DATE"
+  | "PASSWORD";
 
 type CreatedField = {
   id: string;
@@ -84,6 +94,11 @@ const fieldTypeLabels: Record<FieldType, string> = {
   NUMBER: "Number field",
   YES_NO: "Yes / No field",
   PASSWORD: "Password field",
+  LONG_TEXT: "Long text field",
+  SELECT: "Select field",
+  MULTI_SELECT: "Multi-select field",
+  RATING: "Rating field",
+  DATE: "Date field",
 };
 
 const FIELD_INDEX_STEP = 1000;
@@ -112,6 +127,7 @@ type SortableFieldItemProps = {
   onDelete: (fieldId: string) => void;
 };
 
+// this is field Item
 function SortableFieldItem({ field, isDisabled, onEdit, onDelete }: SortableFieldItemProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: field.id,
@@ -156,7 +172,12 @@ function SortableFieldItem({ field, isDisabled, onEdit, onDelete }: SortableFiel
           <Pencil />
           <span className="sr-only">Edit field</span>
         </Button>
-        <Button variant="ghost" size="icon" onClick={() => onDelete(field.id)} disabled={isDisabled}>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => onDelete(field.id)}
+          disabled={isDisabled}
+        >
           <Trash2 />
           <span className="sr-only">Delete field</span>
         </Button>
@@ -264,18 +285,6 @@ export default function FormBuilderPage() {
         formId,
       });
 
-      setCreatedFields((fields) => [
-        ...fields,
-        {
-          id,
-          label: trimmedLabel,
-          description: trimmedDescription || null,
-          placeholder: trimmedPlaceholder || null,
-          type: values.type,
-          isRequired: values.isRequired,
-          index: nextIndex,
-        },
-      ]);
       toast.success("Field created");
       resetCreateField();
       setIsCreateFieldDialogOpen(false);
@@ -404,9 +413,11 @@ export default function FormBuilderPage() {
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <Button variant="outline" size="sm">
-                  <Eye />
-                  Preview
+                <Button variant="outline" size="sm" asChild>
+                  <Link href={`/dashboard/forms/${formId}/preview`}>
+                    <Eye />
+                    Configure & Preview
+                  </Link>
                 </Button>
                 <Button
                   size="sm"
@@ -449,9 +460,6 @@ export default function FormBuilderPage() {
                     <div className="flex items-center justify-between gap-3">
                       <div>
                         <CardTitle>Fields</CardTitle>
-                        <CardDescription>
-                          Add and arrange the questions in this form.
-                        </CardDescription>
                       </div>
                       <Dialog
                         open={isCreateFieldDialogOpen}
@@ -503,11 +511,12 @@ export default function FormBuilderPage() {
                                   <SelectValue placeholder="Select a field type" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  <SelectItem value="TEXT">Text</SelectItem>
-                                  <SelectItem value="EMAIL">Email</SelectItem>
-                                  <SelectItem value="NUMBER">Number</SelectItem>
-                                  <SelectItem value="YES_NO">Yes / No</SelectItem>
-                                  <SelectItem value="PASSWORD">Password</SelectItem>
+                                  {/*directly take selection values  from type field type */}
+                                  {Object.entries(fieldTypeLabels).map(([value, label]) => (
+                                    <SelectItem key={value} value={value}>
+                                      {label}
+                                    </SelectItem>
+                                  ))}
                                 </SelectContent>
                               </Select>
                             </div>
@@ -673,11 +682,11 @@ export default function FormBuilderPage() {
                   <SelectValue placeholder="Select a field type" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="TEXT">Text</SelectItem>
-                  <SelectItem value="EMAIL">Email</SelectItem>
-                  <SelectItem value="NUMBER">Number</SelectItem>
-                  <SelectItem value="YES_NO">Yes / No</SelectItem>
-                  <SelectItem value="PASSWORD">Password</SelectItem>
+                  {Object.entries(fieldTypeLabels).map(([value, label]) => (
+                    <SelectItem key={value} value={value}>
+                      {label}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>

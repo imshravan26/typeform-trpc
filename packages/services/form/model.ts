@@ -1,6 +1,17 @@
 import { z } from "zod";
 
-export const fieldType = z.enum(["TEXT", "EMAIL", "NUMBER", "YES_NO", "PASSWORD"]);
+export const fieldType = z.enum([
+  "TEXT",
+  "LONG_TEXT",
+  "EMAIL",
+  "NUMBER",
+  "YES_NO",
+  "SELECT",
+  "MULTI_SELECT",
+  "RATING",
+  "DATE",
+  "PASSWORD",
+]);
 
 export const createFormInput = z.object({
   title: z.string().max(55).describe("title of the form"),

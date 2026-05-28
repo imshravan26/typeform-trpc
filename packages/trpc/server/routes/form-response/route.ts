@@ -26,7 +26,7 @@ export const formResponseRouter = router({
       const { form, fields, responses } = await formResponseService.listFormResponses({
         formId: input.formId,
         userId: ctx.user.id,
-      });
+      }); 
 
       return {
         form,

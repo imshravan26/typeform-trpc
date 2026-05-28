@@ -5,9 +5,7 @@ import { useUser } from "~/hooks/api/auth";
 
 export default function Home() {
   const { user } = useUser();
-
   const router = useRouter();
-
   useEffect(() => {
     if (user && user?.id) {
       router.replace("/dashboard");

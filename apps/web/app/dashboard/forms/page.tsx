@@ -1,10 +1,8 @@
 "use client";
-
-import { type FormEvent, useState } from "react";
+import { type FormEvent, useEffect, useState } from "react";
 import { BarChart3, Eye, FileText, MoreVertical, Pencil, Plus } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
-
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
 import {
@@ -46,6 +44,8 @@ import { Textarea } from "~/components/ui/textarea";
 import { useCreateForm, useForms } from "~/hooks/api/forms";
 
 const formatDate = (date?: Date | string | null) => {
+ 
+
   if (!date) return "Not available";
 
   return new Intl.DateTimeFormat("en", {
@@ -132,17 +132,6 @@ export default function FormsPage() {
                       maxLength={55}
                       placeholder="Customer feedback"
                       autoFocus
-                      disabled={isPending}
-                    />
-                  </div>
-
-                  <div className="grid gap-2">
-                    <Label htmlFor="form-description">Description</Label>
-                    <Textarea
-                      id="form-description"
-                      value={description}
-                      onChange={(event) => setDescription(event.target.value)}
-                      placeholder="Collect feedback after a support interaction."
                       disabled={isPending}
                     />
                   </div>

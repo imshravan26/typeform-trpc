@@ -1,6 +1,17 @@
 import { z } from "zod";
 
-export const fieldTypeModel = z.enum(["TEXT", "EMAIL", "NUMBER", "YES_NO", "PASSWORD"]);
+export const fieldTypeModel = z.enum([
+  "TEXT",
+  "LONG_TEXT",
+  "EMAIL",
+  "NUMBER",
+  "YES_NO",
+  "SELECT",
+  "MULTI_SELECT",
+  "RATING",
+  "DATE",
+  "PASSWORD",
+]);
 
 export const formResponseInputModel = z.object({
   formId: z.string().describe("id of the form whose responses should be fetched"),
