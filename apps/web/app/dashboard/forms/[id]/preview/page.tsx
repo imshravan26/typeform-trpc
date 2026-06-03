@@ -102,7 +102,11 @@ export default function PreviewPage() {
     (event: KeyboardEvent) => {
       if (event.key === "Enter" && !event.shiftKey) {
         event.preventDefault();
-        isLastField ? handlePreviewSubmit() : goNext();
+        if (isLastField) {
+          handlePreviewSubmit();
+        } else {
+          goNext();
+        }
       }
     },
     [isLastField, handlePreviewSubmit, goNext],
@@ -166,7 +170,7 @@ export default function PreviewPage() {
 
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" asChild>
-              <Link href={`/form/${formId}`} target="_blank">
+              <Link href={`/form/${form.slug ?? formId}`} target="_blank">
                 Open public form
               </Link>
             </Button>

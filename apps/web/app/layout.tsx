@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { DM_Sans, Instrument_Serif, JetBrains_Mono } from "next/font/google";
 import localFont from "next/font/local";
 import "./globals.css";
 import { GlobalProviders } from "~/providers/global";
@@ -14,6 +15,23 @@ const geistMono = localFont({
   variable: "--font-geist-mono",
 });
 
+const instrumentSerif = Instrument_Serif({
+  subsets: ["latin"],
+  weight: "400",
+  style: ["normal", "italic"],
+  variable: "--font-instrument-serif",
+});
+
+const dmSans = DM_Sans({
+  subsets: ["latin"],
+  variable: "--font-dm-sans",
+});
+
+const jetBrainsMono = JetBrains_Mono({
+  subsets: ["latin"],
+  variable: "--font-jetbrains-mono",
+});
+
 export const metadata: Metadata = {
   title: "Typeform",
   description: "A Typeform clone built with Next.js, tRPC, and Tailwind CSS.",
@@ -26,7 +44,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${geistSans.variable} ${geistMono.variable}`}>
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} ${instrumentSerif.variable} ${dmSans.variable} ${jetBrainsMono.variable}`}
+      >
         <ThemeProvider
           attribute="class"
           defaultTheme="system"

@@ -80,6 +80,7 @@ class FormService {
     const forms = await db
       .select({
         id: formsTable.id,
+        slug: formsTable.slug,
         title: formsTable.title,
         description: formsTable.description,
         createdBy: formsTable.createdBy,
@@ -103,6 +104,7 @@ class FormService {
       .select({
         form: {
           id: formsTable.id,
+          slug: formsTable.slug,
           title: formsTable.title,
           description: formsTable.description,
           createdBy: formsTable.createdBy,
@@ -148,6 +150,7 @@ class FormService {
       .select({
         form: {
           id: formsTable.id,
+          slug: formsTable.slug,
           title: formsTable.title,
           description: formsTable.description,
           createdBy: formsTable.createdBy,

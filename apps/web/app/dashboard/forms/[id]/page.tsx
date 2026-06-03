@@ -1,4 +1,5 @@
 "use client";
+/* Enhanced: quiet editorial two-panel form builder layout. */
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
@@ -127,7 +128,6 @@ type SortableFieldItemProps = {
   onDelete: (fieldId: string) => void;
 };
 
-// this is field Item
 function SortableFieldItem({ field, isDisabled, onEdit, onDelete }: SortableFieldItemProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: field.id,
@@ -141,15 +141,15 @@ function SortableFieldItem({ field, isDisabled, onEdit, onDelete }: SortableFiel
         transform: CSS.Transform.toString(transform),
         transition,
       }}
-      className={`flex items-center gap-3 rounded-lg border p-3 ${
-        isDragging ? "bg-muted shadow-sm" : ""
+      className={`flex items-center gap-3 border border-l-2 border-[var(--border)] border-l-transparent bg-[var(--surface)] p-3 transition-colors duration-150 hover:border-[var(--border-hover)] hover:bg-[var(--surface-2)] ${
+        isDragging ? "border-l-[var(--accent)] bg-[var(--surface-2)]" : ""
       }`}
     >
       <Button
         type="button"
         variant="ghost"
         size="icon"
-        className="size-8 cursor-grab active:cursor-grabbing"
+        className="size-8 cursor-grab text-[var(--text-muted)] active:cursor-grabbing"
         disabled={isDisabled}
         {...attributes}
         {...listeners}
@@ -157,15 +157,21 @@ function SortableFieldItem({ field, isDisabled, onEdit, onDelete }: SortableFiel
         <GripVertical className="size-4 text-muted-foreground" />
         <span className="sr-only">Reorder field</span>
       </Button>
-      <div className="flex size-9 items-center justify-center rounded-md bg-muted text-muted-foreground">
+      <div className="flex size-9 items-center justify-center rounded-sm border border-[var(--border)] bg-[var(--bg)] text-[var(--text-secondary)]">
         <FileText className="size-4" />
       </div>
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-2">
-          <p className="font-medium">{field.label}</p>
-          {field.isRequired ? <Badge variant="outline">Required</Badge> : null}
+          <p className="truncate text-sm font-medium">{field.label}</p>
+          {field.isRequired ? (
+            <Badge variant="outline" className="font-mono text-[10px]">
+              Required
+            </Badge>
+          ) : null}
         </div>
-        <p className="text-sm text-muted-foreground">{fieldTypeLabels[field.type]}</p>
+        <p className="font-mono text-[10px] uppercase tracking-widest text-[var(--text-muted)]">
+          {fieldTypeLabels[field.type]}
+        </p>
       </div>
       <div className="flex items-center gap-1">
         <Button variant="ghost" size="icon" onClick={() => onEdit(field)} disabled={isDisabled}>
@@ -390,10 +396,10 @@ export default function FormBuilderPage() {
   };
 
   return (
-    <div className="flex flex-1 flex-col">
+    <div className="flex flex-1 flex-col bg-[var(--bg)]">
       <div className="@container/main flex flex-1 flex-col gap-2">
-        <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
-          <div className="flex flex-col gap-4 px-4 lg:px-6">
+        <div className="flex flex-col gap-4 px-4 py-6 md:px-6 md:py-8">
+          <div className="flex flex-col gap-4">
             <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
               <div className="flex items-start gap-3">
                 <Button variant="ghost" size="icon" asChild className="mt-0.5">
@@ -404,23 +410,31 @@ export default function FormBuilderPage() {
                 </Button>
                 <div>
                   <div className="flex flex-wrap items-center gap-2">
-                    <h2 className="text-2xl font-semibold tracking-tight">Form Builder</h2>
-                    <Badge variant={form?.isPublished ? "default" : "outline"}>
+                    <h2 className="font-mono text-xl font-medium tracking-normal">
+                      {form?.title ?? "Form Builder"}
+                    </h2>
+                    <Badge
+                      variant={form?.isPublished ? "default" : "outline"}
+                      className="font-mono text-[10px]"
+                    >
                       {form?.isPublished ? "Published" : "Draft"}
                     </Badge>
                   </div>
-                  <p className="text-sm text-muted-foreground">Configure form {formId}</p>
+                  <p className="font-mono text-xs text-[var(--text-muted)]">
+                    Configure form {formId}
+                  </p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <Button variant="outline" size="sm" asChild>
+                <Button variant="ghost" size="sm" asChild className="font-mono">
                   <Link href={`/dashboard/forms/${formId}/preview`}>
                     <Eye />
-                    Configure & Preview
+                    Preview
                   </Link>
                 </Button>
                 <Button
                   size="sm"
+                  className="font-mono"
                   onClick={handleTogglePublishStatus}
                   disabled={isUpdatingPublishStatus || !form}
                 >
@@ -433,33 +447,57 @@ export default function FormBuilderPage() {
               </div>
             </div>
 
-            <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
-              <div className="grid gap-4">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Details</CardTitle>
-                    <CardDescription>These details appear at the top of the form.</CardDescription>
+            <div className="grid gap-4 xl:grid-cols-[280px_minmax(0,1fr)]">
+              <div className="contents">
+                <Card className="xl:col-start-2">
+                  <CardHeader className="border-b border-[var(--border)] px-5 pb-5">
+                    <div className="flex gap-6 border-b border-[var(--border)] pb-4 font-mono text-xs uppercase tracking-widest text-[var(--text-muted)]">
+                      <span className="border-b border-[var(--accent)] pb-2 text-foreground">
+                        Settings
+                      </span>
+                      <span className="pb-2">Fields</span>
+                      <span className="pb-2">Logic</span>
+                    </div>
+                    <CardTitle className="font-serif text-3xl font-normal italic tracking-normal">
+                      Details
+                    </CardTitle>
+                    <CardDescription className="text-[var(--text-secondary)]">
+                      These details appear at the top of the form.
+                    </CardDescription>
                   </CardHeader>
-                  <CardContent className="grid gap-4">
-                    <div className="grid gap-2">
-                      <Label htmlFor="builder-title">Title</Label>
+                  <CardContent className="grid gap-5 px-5 pt-5">
+                    <div className="grid gap-1.5 border-b border-[var(--border)] pb-5">
+                      <Label
+                        htmlFor="builder-title"
+                        className="font-mono text-xs text-[var(--text-muted)]"
+                      >
+                        Title
+                      </Label>
                       <Input id="builder-title" placeholder="Customer feedback" />
                     </div>
-                    <div className="grid gap-2">
-                      <Label htmlFor="builder-description">Description</Label>
+                    <div className="grid gap-1.5">
+                      <Label
+                        htmlFor="builder-description"
+                        className="font-mono text-xs text-[var(--text-muted)]"
+                      >
+                        Description
+                      </Label>
                       <Textarea
                         id="builder-description"
+                        className="rounded-sm border-[var(--border)] bg-transparent font-mono focus-visible:border-[var(--accent)] focus-visible:ring-1 focus-visible:ring-[rgba(245,158,11,0.5)]"
                         placeholder="Collect feedback after a support interaction."
                       />
                     </div>
                   </CardContent>
                 </Card>
 
-                <Card>
-                  <CardHeader>
+                <Card className="xl:col-start-1 xl:row-span-2 xl:row-start-1">
+                  <CardHeader className="border-b border-[var(--border)] px-5 pb-5">
                     <div className="flex items-center justify-between gap-3">
                       <div>
-                        <CardTitle>Fields</CardTitle>
+                        <CardTitle className="font-serif text-2xl font-normal italic tracking-normal">
+                          Fields
+                        </CardTitle>
                       </div>
                       <Dialog
                         open={isCreateFieldDialogOpen}
@@ -469,7 +507,7 @@ export default function FormBuilderPage() {
                         }}
                       >
                         <DialogTrigger asChild>
-                          <Button size="sm">
+                          <Button size="sm" className="font-mono">
                             <Plus />
                             Add Field
                           </Button>
@@ -486,8 +524,13 @@ export default function FormBuilderPage() {
                               </DialogDescription>
                             </DialogHeader>
 
-                            <div className="grid gap-2">
-                              <Label htmlFor="field-label">Label</Label>
+                            <div className="grid gap-1.5">
+                              <Label
+                                htmlFor="field-label"
+                                className="font-mono text-xs text-[var(--text-muted)]"
+                              >
+                                Label
+                              </Label>
                               <Input
                                 id="field-label"
                                 maxLength={255}
@@ -498,8 +541,13 @@ export default function FormBuilderPage() {
                               />
                             </div>
 
-                            <div className="grid gap-2">
-                              <Label htmlFor="field-type">Type</Label>
+                            <div className="grid gap-1.5">
+                              <Label
+                                htmlFor="field-type"
+                                className="font-mono text-xs text-[var(--text-muted)]"
+                              >
+                                Type
+                              </Label>
                               <Select
                                 value={selectedFieldType}
                                 onValueChange={(value) =>
@@ -511,7 +559,6 @@ export default function FormBuilderPage() {
                                   <SelectValue placeholder="Select a field type" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  {/*directly take selection values  from type field type */}
                                   {Object.entries(fieldTypeLabels).map(([value, label]) => (
                                     <SelectItem key={value} value={value}>
                                       {label}
@@ -521,8 +568,13 @@ export default function FormBuilderPage() {
                               </Select>
                             </div>
 
-                            <div className="grid gap-2">
-                              <Label htmlFor="field-placeholder">Placeholder</Label>
+                            <div className="grid gap-1.5">
+                              <Label
+                                htmlFor="field-placeholder"
+                                className="font-mono text-xs text-[var(--text-muted)]"
+                              >
+                                Placeholder
+                              </Label>
                               <Input
                                 id="field-placeholder"
                                 placeholder="name@example.com"
@@ -531,8 +583,13 @@ export default function FormBuilderPage() {
                               />
                             </div>
 
-                            <div className="grid gap-2">
-                              <Label htmlFor="field-description">Description</Label>
+                            <div className="grid gap-1.5">
+                              <Label
+                                htmlFor="field-description"
+                                className="font-mono text-xs text-[var(--text-muted)]"
+                              >
+                                Description
+                              </Label>
                               <Textarea
                                 id="field-description"
                                 placeholder="Shown below the question."
@@ -541,10 +598,10 @@ export default function FormBuilderPage() {
                               />
                             </div>
 
-                            <div className="flex items-center justify-between gap-3 rounded-lg border p-3">
+                            <div className="flex items-center justify-between gap-3 rounded-sm border border-[var(--border)] p-3">
                               <div className="grid gap-1">
                                 <Label htmlFor="field-required">Required</Label>
-                                <p className="text-sm text-muted-foreground">
+                                <p className="text-sm text-[var(--text-secondary)]">
                                   Respondents must answer this question.
                                 </p>
                               </div>
@@ -576,17 +633,17 @@ export default function FormBuilderPage() {
                       </Dialog>
                     </div>
                   </CardHeader>
-                  <CardContent className="grid gap-3">
+                  <CardContent className="grid gap-3 px-5 pt-5">
                     {areFieldsLoading ? (
-                      <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
+                      <div className="rounded-sm border border-dashed border-[var(--border)] p-6 text-center text-sm text-[var(--text-secondary)]">
                         Loading fields...
                       </div>
                     ) : fieldsError ? (
-                      <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
+                      <div className="rounded-sm border border-dashed border-[var(--border)] p-6 text-center text-sm text-[var(--text-secondary)]">
                         {fieldsError.message}
                       </div>
                     ) : createdFields.length === 0 ? (
-                      <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
+                      <div className="rounded-sm border border-dashed border-[var(--border)] p-6 text-center text-sm text-[var(--text-secondary)]">
                         No fields added yet.
                       </div>
                     ) : (
@@ -599,7 +656,7 @@ export default function FormBuilderPage() {
                           items={createdFields.map((field) => field.id)}
                           strategy={verticalListSortingStrategy}
                         >
-                          <div className="grid gap-3">
+                          <div className="grid gap-2">
                             {createdFields.map((field) => (
                               <SortableFieldItem
                                 key={field.id}
@@ -619,26 +676,33 @@ export default function FormBuilderPage() {
                 </Card>
               </div>
 
-              <Card className="h-fit">
-                <CardHeader>
-                  <CardTitle>Setup</CardTitle>
-                  <CardDescription>Review the form state before publishing.</CardDescription>
+              <Card className="h-fit xl:col-start-2">
+                <CardHeader className="border-b border-[var(--border)] px-5 pb-5">
+                  <CardTitle className="font-serif text-3xl font-normal italic tracking-normal">
+                    Setup
+                  </CardTitle>
+                  <CardDescription className="text-[var(--text-secondary)]">
+                    Review the form state before publishing.
+                  </CardDescription>
                 </CardHeader>
-                <CardContent className="grid gap-4 text-sm">
+                <CardContent className="grid gap-4 px-5 pt-5 text-sm">
                   <div className="flex items-center justify-between gap-3">
-                    <span className="text-muted-foreground">Status</span>
-                    <Badge variant={form?.isPublished ? "default" : "outline"}>
+                    <span className="font-mono text-xs text-[var(--text-muted)]">Status</span>
+                    <Badge
+                      variant={form?.isPublished ? "default" : "outline"}
+                      className="font-mono text-[10px]"
+                    >
                       {form?.isPublished ? "Published" : "Draft"}
                     </Badge>
                   </div>
                   <Separator />
                   <div className="flex items-center justify-between gap-3">
-                    <span className="text-muted-foreground">Responses</span>
-                    <span>0</span>
+                    <span className="font-mono text-xs text-[var(--text-muted)]">Responses</span>
+                    <span className="font-mono">0</span>
                   </div>
                   <div className="flex items-center justify-between gap-3">
-                    <span className="text-muted-foreground">Fields</span>
-                    <span>{createdFields.length}</span>
+                    <span className="font-mono text-xs text-[var(--text-muted)]">Fields</span>
+                    <span className="font-mono">{createdFields.length}</span>
                   </div>
                 </CardContent>
               </Card>

@@ -28,6 +28,7 @@ export const listFormsOutputModel = z.object({
   forms: z.array(
     z.object({
       id: z.string().describe("id of the form"),
+      slug: z.string().optional().nullable().describe("slug of the form"),
       title: z.string().describe("title of the form"),
       description: z.string().optional().nullable().describe("description of the form"),
       createdBy: z.string().describe("id of the user who created the form"),
@@ -89,6 +90,7 @@ export const listFieldsOutputModel = z.object({
 export const getFormWithFieldsOutputModel = z.object({
   form: z.object({
     id: z.string().describe("id of the form"),
+    slug: z.string().optional().nullable().describe("slug of the form"),
     title: z.string().describe("title of the form"),
     description: z.string().optional().nullable().describe("description of the form"),
     createdBy: z.string().describe("id of the user who created the form"),

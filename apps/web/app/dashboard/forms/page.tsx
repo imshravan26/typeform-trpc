@@ -1,6 +1,7 @@
 "use client";
-import { type FormEvent, useEffect, useState } from "react";
-import { BarChart3, Eye, FileText, MoreVertical, Pencil, Plus } from "lucide-react";
+/* Enhanced: quiet editorial forms grid with amber actions and refined empty states. */
+import { type FormEvent, useState } from "react";
+import { BarChart3, Copy, Eye, FileText, MoreVertical, Pencil, Plus } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { Badge } from "~/components/ui/badge";
@@ -40,12 +41,9 @@ import {
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { Skeleton } from "~/components/ui/skeleton";
-import { Textarea } from "~/components/ui/textarea";
 import { useCreateForm, useForms } from "~/hooks/api/forms";
 
 const formatDate = (date?: Date | string | null) => {
- 
-
   if (!date) return "Not available";
 
   return new Intl.DateTimeFormat("en", {
@@ -65,6 +63,22 @@ export default function FormsPage() {
   const resetCreateForm = () => {
     setTitle("");
     setDescription("");
+  };
+
+  const getReceiverLink = (slug: string) => `${window.location.origin}/form/${slug}`;
+
+  const handleCopyReceiverLink = async (slug?: string | null) => {
+    if (!slug) {
+      toast.error("Receiver link is not available for this form");
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(getReceiverLink(slug));
+      toast.success("Receiver link copied");
+    } catch {
+      toast.error("Failed to copy receiver link");
+    }
   };
 
   const handleCreateForm = async (event: FormEvent<HTMLFormElement>) => {
@@ -93,13 +107,15 @@ export default function FormsPage() {
   };
 
   return (
-    <div className="flex flex-1 flex-col">
+    <div className="flex flex-1 flex-col bg-[var(--bg)]">
       <div className="@container/main flex flex-1 flex-col gap-2">
-        <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
-          <div className="flex items-center justify-between gap-3 px-4 lg:px-6">
+        <div className="flex flex-col gap-4 px-4 py-6 md:px-6 md:py-8">
+          <div className="flex items-center justify-between gap-3">
             <div>
-              <h2 className="text-2xl font-semibold tracking-tight">Forms</h2>
-              <p className="text-sm text-muted-foreground">
+              <h2 className="font-serif text-[2.5rem] font-normal italic leading-none tracking-normal">
+                Your forms
+              </h2>
+              <p className="mt-2 text-sm text-[var(--text-secondary)]">
                 Create, edit, and review your form responses.
               </p>
             </div>
@@ -111,7 +127,7 @@ export default function FormsPage() {
               }}
             >
               <DialogTrigger asChild>
-                <Button size="sm">
+                <Button size="sm" className="font-mono">
                   <Plus />
                   New Form
                 </Button>
@@ -123,8 +139,13 @@ export default function FormsPage() {
                     <DialogDescription>Start with the core details.</DialogDescription>
                   </DialogHeader>
 
-                  <div className="grid gap-2">
-                    <Label htmlFor="form-title">Title</Label>
+                  <div className="grid gap-1.5">
+                    <Label
+                      htmlFor="form-title"
+                      className="font-mono text-xs text-[var(--text-muted)]"
+                    >
+                      Title
+                    </Label>
                     <Input
                       id="form-title"
                       value={title}
@@ -140,12 +161,13 @@ export default function FormsPage() {
                     <Button
                       type="button"
                       variant="outline"
+                      className="font-mono"
                       onClick={() => setIsCreateDialogOpen(false)}
                       disabled={isPending}
                     >
                       Cancel
                     </Button>
-                    <Button type="submit" disabled={isPending}>
+                    <Button type="submit" disabled={isPending} className="font-mono">
                       {isPending ? "Creating..." : "Create Form"}
                     </Button>
                   </DialogFooter>
@@ -154,11 +176,11 @@ export default function FormsPage() {
             </Dialog>
           </div>
 
-          <div className="px-4 lg:px-6">
+          <div>
             {isLoading ? (
-              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                 {Array.from({ length: 6 }).map((_, index) => (
-                  <Card key={index}>
+                  <Card key={index} className="border-[var(--border)] bg-[var(--surface)] p-5">
                     <CardHeader>
                       <div className="flex items-start justify-between gap-4">
                         <div className="grid flex-1 gap-2">
@@ -176,7 +198,7 @@ export default function FormsPage() {
                 ))}
               </div>
             ) : error ? (
-              <Empty className="min-h-[360px] border">
+              <Empty className="min-h-[360px] border border-[var(--border)] bg-[var(--surface)]">
                 <EmptyHeader>
                   <EmptyMedia variant="icon">
                     <FileText />
@@ -186,33 +208,42 @@ export default function FormsPage() {
                 </EmptyHeader>
               </Empty>
             ) : forms.length === 0 ? (
-              <Empty className="min-h-[360px] border">
+              <Empty className="min-h-[360px] border border-[var(--border)] bg-[var(--surface)]">
                 <EmptyHeader>
                   <EmptyMedia variant="icon">
                     <FileText />
                   </EmptyMedia>
-                  <EmptyTitle>No forms yet</EmptyTitle>
-                  <EmptyDescription>Create a form to start collecting responses.</EmptyDescription>
+                  <EmptyTitle className="font-serif text-5xl font-normal italic tracking-normal">
+                    No forms yet.
+                  </EmptyTitle>
+                  <EmptyDescription className="text-[var(--text-secondary)]">
+                    Create a form to start collecting responses.
+                  </EmptyDescription>
                 </EmptyHeader>
                 <EmptyContent>
-                  <Button onClick={() => setIsCreateDialogOpen(true)}>
+                  <Button onClick={() => setIsCreateDialogOpen(true)} className="font-mono">
                     <Plus />
                     New Form
                   </Button>
                 </EmptyContent>
               </Empty>
             ) : (
-              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                 {forms.map((form) => (
-                  <Card key={form.id} className="gap-4">
-                    <CardHeader>
+                  <Card
+                    key={form.id}
+                    className="gap-4 border-[var(--border)] bg-[var(--surface)] p-5 transition-colors duration-150 hover:border-[var(--border-hover)] hover:bg-[var(--surface-2)]"
+                  >
+                    <CardHeader className="px-0">
                       <div className="flex items-start gap-3">
-                        <div className="flex size-10 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
+                        <div className="flex size-10 shrink-0 items-center justify-center rounded-sm border border-[var(--border)] bg-[var(--bg)] text-[var(--text-secondary)]">
                           <FileText className="size-5" />
                         </div>
                         <div className="min-w-0 flex-1">
-                          <CardTitle className="truncate text-base">{form.title}</CardTitle>
-                          <CardDescription className="mt-1 line-clamp-2 min-h-10">
+                          <CardTitle className="truncate text-base font-medium">
+                            {form.title}
+                          </CardTitle>
+                          <CardDescription className="mt-1 line-clamp-2 min-h-10 text-[var(--text-secondary)]">
                             {form.description || "No description"}
                           </CardDescription>
                         </div>
@@ -244,29 +275,45 @@ export default function FormsPage() {
                                 </Link>
                               </DropdownMenuItem>
                               <DropdownMenuSeparator />
-                              <DropdownMenuItem>Copy link</DropdownMenuItem>
+                              <DropdownMenuItem
+                                onSelect={() => void handleCopyReceiverLink(form.slug)}
+                              >
+                                <Copy />
+                                Copy receiver link
+                              </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </CardAction>
                       </div>
                     </CardHeader>
-                    <CardContent className="grid gap-4">
+                    <CardContent className="grid gap-4 px-0">
                       <div className="flex items-center justify-between gap-3">
-                        <Badge variant={form.isPublished ? "default" : "outline"}>
+                        <Badge
+                          variant={form.isPublished ? "default" : "outline"}
+                          className="font-mono text-[10px]"
+                        >
                           {form.isPublished ? "Published" : "Draft"}
                         </Badge>
-                        <span className="text-xs text-muted-foreground">
+                        <span className="font-mono text-[10px] text-[var(--text-muted)]">
+                          Updated {formatDate(form.updatedAt)}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between border-t border-[var(--border)] pt-3">
+                        <span className="font-mono text-[10px] uppercase tracking-widest text-[var(--text-muted)]">
+                          0 responses
+                        </span>
+                        <span className="font-mono text-[10px] text-[var(--text-muted)]">
                           Created {formatDate(form.createdAt)}
                         </span>
                       </div>
                       <div className="grid grid-cols-2 gap-2">
-                        <Button asChild variant="outline" className="w-full">
+                        <Button asChild variant="outline" className="w-full font-mono">
                           <Link href={`/dashboard/forms/${form.id}/submissions`}>
                             <BarChart3 />
                             Submissions
                           </Link>
                         </Button>
-                        <Button asChild className="w-full">
+                        <Button asChild className="w-full font-mono">
                           <Link href={`/dashboard/forms/${form.id}`}>
                             <Pencil />
                             Builder

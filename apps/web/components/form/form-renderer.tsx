@@ -1,4 +1,5 @@
 "use client";
+/* Enhanced: quiet editorial respondent input controls. */
 
 import { Input } from "~/components/ui/input";
 import { Textarea } from "~/components/ui/textarea";
@@ -9,7 +10,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "~/components/ui/select";
-import { Toggle } from "~/components/ui/toggle";
 import { cn } from "~/lib/utils";
 import { getInputType } from "~/lib/form-utils";
 import type { FormField } from "~/types/form";
@@ -24,8 +24,8 @@ type Props = {
 
 export function FieldRenderer({ field, value, onChange, disabled, error }: Props) {
   const baseInputClass = cn(
-    "transition-all duration-200",
-    error && "border-destructive focus-visible:ring-destructive"
+    "font-mono transition-colors duration-150",
+    error && "border-destructive focus-visible:ring-destructive",
   );
 
   switch (field.type) {
@@ -38,7 +38,10 @@ export function FieldRenderer({ field, value, onChange, disabled, error }: Props
           placeholder={field.placeholder ?? undefined}
           disabled={disabled}
           rows={4}
-          className={cn("resize-none", baseInputClass)}
+          className={cn(
+            "resize-none rounded-sm border-[var(--border)] bg-transparent focus-visible:border-[var(--accent)] focus-visible:ring-1 focus-visible:ring-[rgba(245,158,11,0.5)]",
+            baseInputClass,
+          )}
         />
       );
 
@@ -52,13 +55,13 @@ export function FieldRenderer({ field, value, onChange, disabled, error }: Props
               disabled={disabled}
               onClick={() => onChange(opt)}
               className={cn(
-                "flex-1 rounded-lg border px-4 py-3 text-sm font-medium capitalize transition-all duration-150",
+                "flex-1 rounded-sm border px-4 py-3 font-mono text-sm font-medium capitalize transition-colors duration-100",
                 value === opt
-                  ? "border-primary bg-primary text-primary-foreground"
-                  : "border-border bg-background hover:bg-muted"
+                  ? "border-[var(--accent)] bg-[var(--accent)] text-black"
+                  : "border-[var(--border)] bg-transparent text-foreground hover:border-[var(--border-hover)] hover:bg-[var(--surface-2)]",
               )}
             >
-              {opt === "yes" ? "👍  Yes" : "👎  No"}
+              {opt === "yes" ? "Yes" : "No"}
             </button>
           ))}
         </div>
@@ -75,11 +78,11 @@ export function FieldRenderer({ field, value, onChange, disabled, error }: Props
               disabled={disabled}
               onClick={() => onChange(String(star))}
               className={cn(
-                "text-2xl transition-transform duration-100 hover:scale-110",
-                Number(value) >= star ? "text-amber-400" : "text-muted-foreground/30"
+                "font-mono text-2xl transition-colors duration-100",
+                Number(value) >= star ? "text-[var(--accent)]" : "text-[var(--text-muted)]",
               )}
             >
-              ★
+              *
             </button>
           ))}
         </div>
@@ -88,17 +91,21 @@ export function FieldRenderer({ field, value, onChange, disabled, error }: Props
 
     case "SELECT":
       return (
-        <Select
-          value={value}
-          onValueChange={onChange}
-          disabled={disabled}
-        >
-          <SelectTrigger id={field.id} className={cn("w-full", baseInputClass)}>
+        <Select value={value} onValueChange={onChange} disabled={disabled}>
+          <SelectTrigger
+            id={field.id}
+            className={cn(
+              "w-full rounded-sm border-[var(--border)] bg-transparent font-mono focus:ring-1 focus:ring-[rgba(245,158,11,0.5)]",
+              baseInputClass,
+            )}
+          >
             <SelectValue placeholder={field.placeholder ?? "Select an option"} />
           </SelectTrigger>
           <SelectContent>
             {(field.options ?? []).map((opt) => (
-              <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+              <SelectItem key={opt} value={opt}>
+                {opt}
+              </SelectItem>
             ))}
           </SelectContent>
         </Select>
@@ -116,16 +123,14 @@ export function FieldRenderer({ field, value, onChange, disabled, error }: Props
                 disabled={disabled}
                 onClick={() => {
                   const current = value.split(",").filter(Boolean);
-                  const next = selected
-                    ? current.filter((v) => v !== opt)
-                    : [...current, opt];
+                  const next = selected ? current.filter((v) => v !== opt) : [...current, opt];
                   onChange(next.join(","));
                 }}
                 className={cn(
-                  "rounded-full border px-4 py-1.5 text-sm transition-all duration-150",
+                  "rounded-sm border px-4 py-1.5 font-mono text-sm transition-colors duration-100",
                   selected
-                    ? "border-primary bg-primary text-primary-foreground"
-                    : "border-border bg-background hover:bg-muted"
+                    ? "border-[var(--accent)] bg-[var(--accent)] text-black"
+                    : "border-[var(--border)] bg-transparent text-foreground hover:border-[var(--border-hover)] hover:bg-[var(--surface-2)]",
                 )}
               >
                 {opt}
@@ -144,7 +149,10 @@ export function FieldRenderer({ field, value, onChange, disabled, error }: Props
           onChange={(e) => onChange(e.target.value)}
           placeholder={field.placeholder ?? undefined}
           disabled={disabled}
-          className={baseInputClass}
+          className={cn(
+            "rounded-sm border-[var(--border)] bg-transparent focus-visible:border-[var(--accent)] focus-visible:ring-1 focus-visible:ring-[rgba(245,158,11,0.5)]",
+            baseInputClass,
+          )}
         />
       );
   }

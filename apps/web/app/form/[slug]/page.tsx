@@ -1,18 +1,19 @@
 "use client";
+/* Enhanced: quiet editorial one-question respondent view. */
 import { useCallback, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
-import { ArrowRight, ChevronUp, ChevronDown } from "lucide-react";
+import { ArrowRight, ChevronDown, ChevronUp } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "~/components/ui/button";
 import { Label } from "~/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/components/ui/card";
+import { Card, CardDescription, CardHeader, CardTitle } from "~/components/ui/card";
 import { FormProgress } from "~/components/form/form-progressbar";
 import { FieldRenderer } from "~/components/form/form-renderer";
 import { ThankYouScreen } from "~/components/form/thank-u-screen";
 import { sortFieldsByIndex, validateField } from "~/lib/form-utils";
-import { useCreateFormSubmission, useFormWithFields, useFormWithSlug } from "~/hooks/api/forms";
+import { useCreateFormSubmission, useFormWithSlug } from "~/hooks/api/forms";
 import type { FormField } from "~/types/form";
 
 type Direction = 1 | -1;
@@ -109,32 +110,36 @@ export default function PublicFormPage() {
     (e: React.KeyboardEvent) => {
       if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault();
-        isLastField ? handleSubmit() : goNext();
+        if (isLastField) {
+          handleSubmit();
+        } else {
+          goNext();
+        }
       }
     },
     [isLastField, handleSubmit, goNext],
   );
 
-  // ── Loading ──────────────────────────────────────────────
   if (isLoading) {
     return (
-      <main className="flex min-h-screen items-center justify-center">
+      <main className="flex min-h-screen items-center justify-center bg-[var(--bg)] text-foreground">
         <div className="flex flex-col items-center gap-3">
-          <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-          <p className="text-sm text-muted-foreground">Loading form…</p>
+          <div className="h-8 w-8 animate-spin rounded-sm border border-[var(--border)] border-t-[var(--accent)]" />
+          <p className="font-mono text-xs text-[var(--text-muted)]">Loading form...</p>
         </div>
       </main>
     );
   }
 
-  // ── Error / not found ────────────────────────────────────
   if (error || !form) {
     return (
-      <main className="flex min-h-screen items-center justify-center p-6">
+      <main className="flex min-h-screen items-center justify-center bg-[var(--bg)] p-6 text-foreground">
         <Card className="w-full max-w-md text-center">
           <CardHeader>
-            <CardTitle>Form not found</CardTitle>
-            <CardDescription>
+            <CardTitle className="font-serif text-4xl font-normal italic tracking-normal">
+              Form not found.
+            </CardTitle>
+            <CardDescription className="text-[var(--text-secondary)]">
               {error?.message ?? "This form doesn't exist or has been removed."}
             </CardDescription>
           </CardHeader>
@@ -143,38 +148,43 @@ export default function PublicFormPage() {
     );
   }
 
-  // ── Unpublished ──────────────────────────────────────────
   if (!form.isPublished) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-muted/30 p-6">
+      <main className="flex min-h-screen items-center justify-center bg-[var(--bg)] p-6 text-foreground">
         <Card className="w-full max-w-md text-center">
           <CardHeader>
-            <CardTitle>{form.title}</CardTitle>
-            <CardDescription>This form is currently closed for submissions.</CardDescription>
+            <CardTitle className="font-serif text-4xl font-normal italic tracking-normal">
+              {form.title}
+            </CardTitle>
+            <CardDescription className="text-[var(--text-secondary)]">
+              This form is currently closed for submissions.
+            </CardDescription>
           </CardHeader>
         </Card>
       </main>
     );
   }
 
-  // ── No fields ────────────────────────────────────────────
   if (sortedFields.length === 0) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-muted/30 p-6">
+      <main className="flex min-h-screen items-center justify-center bg-[var(--bg)] p-6 text-foreground">
         <Card className="w-full max-w-md text-center">
           <CardHeader>
-            <CardTitle>{form.title}</CardTitle>
-            <CardDescription>This form has no questions yet.</CardDescription>
+            <CardTitle className="font-serif text-4xl font-normal italic tracking-normal">
+              {form.title}
+            </CardTitle>
+            <CardDescription className="text-[var(--text-secondary)]">
+              This form has no questions yet.
+            </CardDescription>
           </CardHeader>
         </Card>
       </main>
     );
   }
 
-  // ── Thank you ────────────────────────────────────────────
   if (submitted) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-muted/30 p-6">
+      <main className="flex min-h-screen items-center justify-center bg-[var(--bg)] p-6 text-foreground">
         <div className="w-full max-w-lg">
           <ThankYouScreen
             formTitle={form.title}
@@ -190,24 +200,25 @@ export default function PublicFormPage() {
     );
   }
 
-  // ── Main form ────────────────────────────────────────────
   return (
     <main
-      className="flex min-h-screen flex-col items-center justify-center bg-muted/30 p-6"
+      className="relative flex min-h-screen flex-col items-center justify-center bg-[var(--bg)] p-6 text-foreground"
       onKeyDown={handleKeyDown}
     >
-      <div className="w-full max-w-lg space-y-6">
-        {/* Header */}
+      <div className="absolute left-0 right-0 top-0">
+        <FormProgress current={currentIndex + 1} total={sortedFields.length} />
+      </div>
+      <div className="w-full max-w-2xl space-y-8">
         <div className="space-y-1">
-          <h1 className="text-xl font-semibold tracking-tight">{form.title}</h1>
-          {form.description && <p className="text-sm text-muted-foreground">{form.description}</p>}
+          <p className="font-mono text-xs uppercase tracking-widest text-[var(--text-muted)]">
+            {form.title}
+          </p>
+          {form.description && (
+            <p className="text-sm text-[var(--text-secondary)]">{form.description}</p>
+          )}
         </div>
 
-        {/* Progress */}
-        <FormProgress current={currentIndex + 1} total={sortedFields.length} />
-
-        {/* Question card */}
-        <div className="relative overflow-hidden rounded-xl border bg-background shadow-sm">
+        <div className="relative overflow-hidden border border-[var(--border)] bg-[var(--surface)]">
           <AnimatePresence mode="wait" custom={direction}>
             {currentField && (
               <motion.div
@@ -218,23 +229,26 @@ export default function PublicFormPage() {
                 animate="center"
                 exit="exit"
                 transition={{ duration: 0.22, ease: "easeOut" }}
-                className="p-6 space-y-4"
+                className="space-y-6 p-6 md:p-8"
               >
-                {/* Question number + label */}
                 <div className="space-y-1">
-                  <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
+                  <p className="font-mono text-xs uppercase tracking-widest text-[var(--text-muted)]">
                     Question {currentIndex + 1}
                   </p>
-                  <Label htmlFor={currentField.id} className="text-base font-medium leading-snug">
+                  <Label
+                    htmlFor={currentField.id}
+                    className="font-serif text-[2rem] font-normal italic leading-tight tracking-normal"
+                  >
                     {currentField.label}
                     {isRequired && <span className="ml-1 text-destructive">*</span>}
                   </Label>
                   {currentField.description && (
-                    <p className="text-sm text-muted-foreground">{currentField.description}</p>
+                    <p className="text-sm text-[var(--text-secondary)]">
+                      {currentField.description}
+                    </p>
                   )}
                 </div>
 
-                {/* Input */}
                 <FieldRenderer
                   field={currentField}
                   value={values[currentField.id] ?? ""}
@@ -243,21 +257,18 @@ export default function PublicFormPage() {
                   error={errors[currentField.id]}
                 />
 
-                {/* Inline error */}
                 {errors[currentField.id] && (
                   <p className="text-xs text-destructive">{errors[currentField.id]}</p>
                 )}
 
-                {/* Actions */}
                 <div className="flex items-center justify-between pt-2">
-                  {/* Skip — only for non-required */}
                   <div>
                     {!isRequired && (
                       <button
                         type="button"
                         onClick={handleSkip}
                         disabled={isSubmitting}
-                        className="text-sm text-muted-foreground underline-offset-4 hover:underline disabled:opacity-50"
+                        className="font-mono text-xs text-[var(--text-muted)] underline-offset-4 hover:text-[var(--accent)] hover:underline disabled:opacity-50"
                       >
                         Skip
                       </button>
@@ -265,12 +276,12 @@ export default function PublicFormPage() {
                   </div>
 
                   {isLastField ? (
-                    <Button onClick={handleSubmit} disabled={isSubmitting}>
-                      {isSubmitting ? "Submitting…" : "Submit"}
+                    <Button onClick={handleSubmit} disabled={isSubmitting} className="font-mono">
+                      {isSubmitting ? "Submitting..." : "Submit"}
                       {!isSubmitting && <ArrowRight className="ml-2 h-4 w-4" />}
                     </Button>
                   ) : (
-                    <Button onClick={goNext} disabled={isSubmitting}>
+                    <Button onClick={goNext} disabled={isSubmitting} className="font-mono">
                       Next
                       <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>
@@ -281,17 +292,17 @@ export default function PublicFormPage() {
           </AnimatePresence>
         </div>
 
-        {/* Keyboard hint + nav arrows */}
         <div className="flex items-center justify-between">
-          <p className="text-xs text-muted-foreground">
-            Press <kbd className="rounded border px-1 font-mono text-xs">Enter ↵</kbd> to continue
+          <p className="font-mono text-xs text-[var(--text-muted)]">
+            press{" "}
+            <kbd className="border border-[var(--border)] px-1 font-mono text-xs">Enter ↵</kbd>
           </p>
           <div className="flex gap-1">
             <button
               type="button"
               onClick={goPrev}
               disabled={currentIndex === 0 || isSubmitting}
-              className="rounded-md border p-1.5 text-muted-foreground transition hover:bg-muted disabled:opacity-30"
+              className="border border-[var(--border)] p-1.5 text-[var(--text-muted)] transition-colors duration-100 hover:bg-[var(--surface-2)] disabled:opacity-30"
               aria-label="Previous question"
             >
               <ChevronUp className="h-4 w-4" />
@@ -300,7 +311,7 @@ export default function PublicFormPage() {
               type="button"
               onClick={isLastField ? handleSubmit : goNext}
               disabled={isSubmitting}
-              className="rounded-md border p-1.5 text-muted-foreground transition hover:bg-muted disabled:opacity-30"
+              className="border border-[var(--border)] p-1.5 text-[var(--text-muted)] transition-colors duration-100 hover:bg-[var(--surface-2)] disabled:opacity-30"
               aria-label="Next question"
             >
               <ChevronDown className="h-4 w-4" />

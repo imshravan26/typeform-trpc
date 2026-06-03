@@ -1,4 +1,5 @@
 "use client";
+/* Enhanced: quiet editorial dark sign-up card and amber-focused controls. */
 import { SubmitHandler, useForm } from "react-hook-form";
 import { cn } from "~/lib/utils";
 import { Button } from "~/components/ui/button";
@@ -40,16 +41,22 @@ export function SignupForm({ className, ...props }: React.ComponentProps<"div">)
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
-      <Card>
+      <Card className="border-[var(--border)] bg-[var(--surface)]">
         <CardHeader className="text-center">
-          <CardTitle className="text-xl">Create your account</CardTitle>
-          <CardDescription>Enter your email below to create your account</CardDescription>
+          <CardTitle className="font-serif text-4xl font-normal italic tracking-normal">
+            Create your account.
+          </CardTitle>
+          <CardDescription className="text-[var(--text-secondary)]">
+            Enter your email below to create your account
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)}>
-            <FieldGroup>
-              <Field>
-                <FieldLabel htmlFor="name">Full Name</FieldLabel>
+            <FieldGroup className="gap-5">
+              <Field className="gap-1.5">
+                <FieldLabel htmlFor="name" className="font-mono text-xs text-[var(--text-muted)]">
+                  Full Name
+                </FieldLabel>
                 <Input
                   id="name"
                   type="text"
@@ -57,8 +64,10 @@ export function SignupForm({ className, ...props }: React.ComponentProps<"div">)
                   {...register("name", { required: true })}
                 />
               </Field>
-              <Field>
-                <FieldLabel htmlFor="email">Email</FieldLabel>
+              <Field className="gap-1.5">
+                <FieldLabel htmlFor="email" className="font-mono text-xs text-[var(--text-muted)]">
+                  Email
+                </FieldLabel>
                 <Input
                   id="email"
                   type="email"
@@ -66,10 +75,15 @@ export function SignupForm({ className, ...props }: React.ComponentProps<"div">)
                   {...register("email", { required: true })}
                 />
               </Field>
-              <Field>
+              <Field className="gap-1.5">
                 <Field className="grid grid-cols-2 gap-4">
-                  <Field>
-                    <FieldLabel htmlFor="password">Password</FieldLabel>
+                  <Field className="gap-1.5">
+                    <FieldLabel
+                      htmlFor="password"
+                      className="font-mono text-xs text-[var(--text-muted)]"
+                    >
+                      Password
+                    </FieldLabel>
                     <Input
                       id="password"
                       type="password"
@@ -79,8 +93,13 @@ export function SignupForm({ className, ...props }: React.ComponentProps<"div">)
                       })}
                     />
                   </Field>
-                  <Field>
-                    <FieldLabel htmlFor="confirm-password">Confirm Password</FieldLabel>
+                  <Field className="gap-1.5">
+                    <FieldLabel
+                      htmlFor="confirm-password"
+                      className="font-mono text-xs text-[var(--text-muted)]"
+                    >
+                      Confirm Password
+                    </FieldLabel>
                     <Input
                       id="confirm-password"
                       type="password"
@@ -88,21 +107,38 @@ export function SignupForm({ className, ...props }: React.ComponentProps<"div">)
                     />
                   </Field>
                 </Field>
-                <FieldDescription>Must be at least 8 characters long.</FieldDescription>
+                <FieldDescription className="font-mono text-xs text-[var(--text-muted)]">
+                  Must be at least 8 characters long.
+                </FieldDescription>
               </Field>
               <Field>
-                <Button type="submit">Create Account</Button>
-                <FieldDescription className="text-center">
-                  Already have an account? <a href="/login">Sign in</a>
+                <Button type="submit" className="font-mono">
+                  Create Account
+                </Button>
+                <FieldDescription className="text-center text-[var(--text-secondary)]">
+                  Already have an account?{" "}
+                  <a
+                    href="/login"
+                    className="text-[var(--accent)] hover:text-[var(--accent-hover)]"
+                  >
+                    Sign in
+                  </a>
                 </FieldDescription>
               </Field>
             </FieldGroup>
           </form>
         </CardContent>
       </Card>
-      <FieldDescription className="px-6 text-center">
-        By clicking continue, you agree to our <a href="#">Terms of Service</a> and{" "}
-        <a href="#">Privacy Policy</a>.
+      <FieldDescription className="px-6 text-center text-xs text-[var(--text-muted)]">
+        By clicking continue, you agree to our{" "}
+        <a href="#" className="text-[var(--text-secondary)]">
+          Terms of Service
+        </a>{" "}
+        and{" "}
+        <a href="#" className="text-[var(--text-secondary)]">
+          Privacy Policy
+        </a>
+        .
       </FieldDescription>
     </div>
   );
